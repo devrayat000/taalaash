@@ -1,0 +1,2 @@
+ALTER TABLE "account" ADD COLUMN "accessTokenExpiresAt" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "account" ADD COLUMN "refreshTokenExpiresAt" timestamp with time zone DEFAULT now();
