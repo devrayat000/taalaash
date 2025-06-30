@@ -1,43 +1,70 @@
-"use server";
+// import without from "lodash/without";
 
-import without from "lodash/without";
+// import { postIndex } from "@/lib/algolia";
+import { createServerFn } from "@tanstack/react-start";
+import { authed } from "@/server/middleware";
+import { array, object, string } from "valibot";
+import db from "@/lib/db";
+import { bookAuthor, chapter, post, subject } from "@/db/schema";
+import { and, count, eq, ilike, inArray } from "drizzle-orm";
 
-import { postIndex } from "@/lib/algolia";
+export const getBooksBySubject = createServerFn({ method: "GET" })
+	// .middleware([authed])
+	.validator(
+		object({
+			subjects: array(string()),
+			query: string(),
+		}),
+	)
+	.handler(async ({ data: { query, subjects } }) => {
+		// const facets = without([subject ? `subject.name:${subject}` : null], null);
 
-export async function getBooksBySubject(
-  _: { value: string }[],
-  { subjects, query }: { subjects: string[]; query: string }
-) {
-  // const facets = without([subject ? `subject.name:${subject}` : null], null);
+		const books = await db
+			.select({
+				id: bookAuthor.id,
+				value: bookAuthor.name,
+				count: count(),
+			})
+			.from(bookAuthor)
+			.innerJoin(subject, eq(bookAuthor.subjectId, subject.id))
+			.innerJoin(chapter, eq(bookAuthor.id, chapter.bookAuthorId))
+			.innerJoin(post, eq(chapter.id, post.chapterId))
+			.where(
+				and(inArray(subject.name, subjects), ilike(post.text, `%${query}%`)),
+			)
+			.groupBy(bookAuthor.id, bookAuthor.name);
 
-  const books = await postIndex.searchForFacetValues("book.name", "", {
-    maxFacetHits: 100,
-    // @ts-ignore
-    facetFilters: [subjects?.map((subject) => `subject.name:${subject}`)],
-    query,
-  });
+		return books;
+	});
 
-  return books.facetHits;
-}
+export const getChaptersByBook = createServerFn({ method: "GET" })
+	// .middleware([authed])
+	.validator(
+		object({
+			subjects: array(string()),
+			books: array(string()),
+			query: string(),
+		}),
+	)
+	.handler(async ({ data: { books, subjects, query } }) => {
+		const chapters = await db
+			.select({
+				id: bookAuthor.id,
+				value: bookAuthor.name,
+				count: count(),
+			})
+			.from(bookAuthor)
+			.innerJoin(subject, eq(bookAuthor.subjectId, subject.id))
+			.innerJoin(chapter, eq(bookAuthor.id, chapter.bookAuthorId))
+			.innerJoin(post, eq(chapter.id, post.chapterId))
+			.where(
+				and(
+					inArray(subject.name, subjects),
+					inArray(bookAuthor.name, books),
+					ilike(post.text, `%${query}%`),
+				),
+			)
+			.groupBy(chapter.id, chapter.name);
 
-export async function getChaptersByBook(
-  _: { value: string }[],
-  {
-    books,
-    subjects,
-    query,
-  }: { books: string[]; subjects: string[]; query: string }
-) {
-  console.log(books, subjects, query);
-
-  const chapters = await postIndex.searchForFacetValues("chapter.name", "", {
-    maxFacetHits: 100,
-    // @ts-ignore
-    facetFilters: [
-      books?.map((book) => `book.name:${book}`),
-      subjects?.map((subject) => `subject.name:${subject}`),
-    ],
-    query,
-  });
-  return chapters.facetHits;
-}
+		return chapters;
+	});

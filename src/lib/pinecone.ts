@@ -1,9 +1,28 @@
-import { Pinecone } from '@pinecone-database/pinecone';
-import { fetchWithEvent } from '@tanstack/react-start/server'
+import {
+	type Index,
+	Pinecone,
+	type RecordMetadata,
+} from "@pinecone-database/pinecone";
 
-export const pinecone = new Pinecone({
-    apiKey: process.env.PINECONE_API_KEY || '',
-    fetchApi: fetchWithEvent,
-})
+declare global {
+	var pc: Pinecone | undefined;
+	var pci: Index<RecordMetadata> | undefined;
+}
 
-export const pineconeIndex = pinecone.Index('taalaash');
+const pinecone =
+	globalThis.pc ??
+	new Pinecone({
+		apiKey: process.env.PINECONE_API_KEY || "",
+		// fetchApi: fetchWithEvent,
+	});
+
+const pineconeIndex =
+	globalThis.pci ??
+	pinecone.Index(process.env.PINECONE_INDEX_NAME || "taalaash");
+
+if (process.env.NODE_ENV !== "production") {
+	globalThis.pc = pinecone;
+	globalThis.pci = pineconeIndex;
+}
+
+export { pinecone, pineconeIndex };

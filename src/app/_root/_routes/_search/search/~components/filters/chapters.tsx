@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
 } from "@/components/ui/form";
 // import {
 //   Select,
@@ -20,64 +20,48 @@ import { useFormState } from "react-dom";
 import { useEffect } from "react";
 import { getChaptersByBook } from "./actions";
 import Select from "@/components/react-select";
+import { useFieldContext } from "./form";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
+import { Label } from "@/components/ui/label";
 
 export type ChapterFilterProps = {
-  chapters?: { value: string; count: number }[];
-  query: string;
+	chapters?: { value: string; count: number }[];
+	query: string;
 };
 
 export default function ChapterFilter({ query, chapters }: ChapterFilterProps) {
-  const form = useFormContext();
-  const [initialChapters, getChapters, isLoading] = useFormState(
-    getChaptersByBook,
-    chapters ?? []
-  );
+	const field = useFieldContext<{ value: string; count: number }[]>();
+	// const queryClient = useQueryClient();
+	// const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
 
-  useEffect(() => {
-    const { unsubscribe } = form.watch(({ books, subjects }) => {
-      // if (books.length || subjects.length) {
-      getChapters({
-        // @ts-ignore
-        books: books?.map((s) => s.value) || [],
-        // @ts-ignore
-        subjects: subjects?.map((s) => s.value) || [],
-        query,
-      });
-      // }
-    });
-    return unsubscribe;
-  }, [form, getChapters, query]);
+	// const [initialChapters, getChapters, isLoading] = useFormState(
+	// 	getChaptersByBook,
+	// 	chapters ?? [],
+	// );
 
-  return (
-    <FormField
-      control={form.control}
-      name="chapters"
-      disabled={
-        form.formState.isSubmitting || !initialChapters?.length || isLoading
-      }
-      render={({ field }) => (
-        <FormItem className="mt-2">
-          <FormLabel>Chapters</FormLabel>
-          <FormControl>
-            <Select
-              name={field.name}
-              onBlur={field.onBlur}
-              isDisabled={field.disabled}
-              options={initialChapters}
-              isMulti
-              value={field.value}
-              getOptionValue={(option) => option.value}
-              getOptionLabel={(option) => `${option.value} (${option.count})`}
-              onChange={field.onChange}
-              closeMenuOnSelect={false}
-            />
-          </FormControl>
-          <FormDescription className="text-xs">
-            You can select multiple items
-          </FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
+	return (
+		<div className="mt-2">
+			<Label htmlFor={field.name}>Chapters</Label>
+			<Select
+				id={field.name}
+				name={field.name}
+				onBlur={field.handleBlur}
+				isDisabled={field.state.meta.isValidating}
+				options={chapters}
+				isMulti
+				value={field.state.value}
+				getOptionValue={(option) => option.value}
+				getOptionLabel={(option) => `${option.value} (${option.count})`}
+				onChange={(newValue) =>
+					field.handleChange(newValue as { value: string; count: number }[])
+				}
+				closeMenuOnSelect={false}
+			/>
+			{/* <FormDescription className="text-xs">
+				You can select multiple items
+			</FormDescription>
+			<FormMessage /> */}
+		</div>
+	);
 }

@@ -14,7 +14,7 @@ import {
 } from "valibot";
 
 export const searchRecords = createServerFn({ method: "GET" })
-	.middleware([authed])
+	// .middleware([authed])
 	.validator(
 		object({
 			query: pipe(string(), nonEmpty()),

@@ -5,13 +5,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { array, object, string } from "valibot";
 
 export const upsertPosts = createServerFn({ method: "POST" })
-	.middleware([authed])
+	// .middleware([authed])
 	.validator(
 		object({
 			postIds: array(string()),
 		}),
 	)
 	.handler(async ({ data: { postIds } }) => {
+		console.log(`Upserting posts to Pinecone...`);
 		const posts = await getManyPostsForIndexing({ data: postIds });
-		await pineconeIndex.upsertRecords(posts);
+		await pineconeIndex.upsertRecords(posts).catch(console.log);
 	});

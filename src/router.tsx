@@ -4,25 +4,24 @@ import { queryClient } from "./lib/query-client";
 import { pineconeIndex } from "./lib/pinecone";
 
 const context = {
-  queryClient,
-  pinecone: pineconeIndex,
-}
+	queryClient,
+};
 
 export type Context = typeof context;
 
 export function createRouter() {
-  const router = createTanStackRouter({
-    routeTree,
-    scrollRestoration: true,
-    defaultPreload: "intent",
-    context,
-  });
+	const router = createTanStackRouter({
+		routeTree,
+		scrollRestoration: true,
+		defaultPreload: "intent",
+		context,
+	});
 
-  return router;
+	return router;
 }
 
 declare module "@tanstack/react-router" {
-  interface Register {
-    router: ReturnType<typeof createRouter>;
-  }
+	interface Register {
+		router: ReturnType<typeof createRouter>;
+	}
 }

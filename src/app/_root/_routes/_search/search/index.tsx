@@ -20,14 +20,14 @@ import { getRequestURL } from "@tanstack/react-start/server";
 import { getPosts } from "@/server/post/service";
 import { searchRecords } from "@/server/search/service";
 
-async function SearchPage() {
+function SearchPage() {
 	return (
 		<div>
 			<div className="flex flex-col lg:hidden items-stretch gap-2 pb-2 px-1">
 				<SearchForm />
-				{/* <Suspense>
-          <Filters searchParams={searchParams} />
-        </Suspense> */}
+				<Suspense>
+					<Filters />
+				</Suspense>
 			</div>
 			<section className="flex gap-x-2">
 				<aside className="lg:basis-80 hidden lg:mt-3 lg:block">
@@ -55,9 +55,12 @@ export const Route = createFileRoute("/_root/_routes/_search/search/")({
 		subject: optional(array(string())),
 		edition: optional(array(string())),
 		books: optional(array(string())),
+		chapters: optional(array(string())),
 	}),
 	loaderDeps: ({ search: { query, page } }) => ({ query, page }),
 	loader: async ({ deps, context }) => {
+		console.log("Loading search results with deps:", deps);
+
 		const posts = await searchRecords({ data: { ...deps, limit: 12 } });
 		await context.queryClient.ensureQueryData({
 			queryKey: ["posts", deps],
