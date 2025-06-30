@@ -104,27 +104,28 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { reactStartCookies } from "better-auth/react-start";
+import { admin } from "better-auth/plugins";
 import db from "./db";
 import * as schema from "@/db/schema";
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, {
-    provider: "pg", // or "pg" or "mysql"
-    schema: {
-      user: schema.users,
-      session: schema.sessions,
-      account: schema.accounts,
-      verification: schema.verifications,
-    }, // your Drizzle schema
-  }),
-  plugins: [reactStartCookies()],
-  socialProviders: {
-    google: {
-      clientId: process.env.VITE_GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    },
-  },
-  //... the rest of your config
+	database: drizzleAdapter(db, {
+		provider: "pg", // or "pg" or "mysql"
+		schema: {
+			user: schema.users,
+			session: schema.sessions,
+			account: schema.accounts,
+			verification: schema.verifications,
+		}, // your Drizzle schema
+	}),
+	plugins: [reactStartCookies(), admin()],
+	socialProviders: {
+		google: {
+			clientId: process.env.VITE_GOOGLE_CLIENT_ID!,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+		},
+	},
+	//... the rest of your config
 });
 
 // export async function requireAuth(callbackUrl = "/signin") {

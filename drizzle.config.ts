@@ -1,12 +1,15 @@
+import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  schema: ["./src/db/schema.ts", "./src/db/auth.ts"],
-  dialect: "postgresql",
-  dbCredentials: {
-    url: "postgres://postgres:postgres@localhost:5432/taalaash-latest",
-  },
-  verbose: true,
-  strict: true,
-  out: "./drizzle",
+	schema: ["./src/db/schema.ts", "./src/db/auth.ts"],
+	dialect: "postgresql",
+	dbCredentials: {
+		url:
+			process.env.DATABASE_URL ??
+			"postgres://postgres:postgres@localhost:5432/taalaash-latest",
+	},
+	verbose: true,
+	strict: true,
+	out: "./drizzle",
 });
