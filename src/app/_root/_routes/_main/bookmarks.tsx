@@ -1,7 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { use } from "react";
-// import Link from "next/link";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { getBookmarkedPosts } from "@/server/bookmark/service";
 import logoMulti from "@/assets/logo_single.png?url";
@@ -41,4 +38,9 @@ function BookmarksPage() {
 export const Route = createFileRoute("/_root/_routes/_main/bookmarks")({
 	component: BookmarksPage,
 	loader: () => getBookmarkedPosts(),
+	async beforeLoad({ context }) {
+		if (!context.isAuthenticated) {
+			throw redirect({ to: "/", search: { error: "Unauthorized" } });
+		}
+	},
 });

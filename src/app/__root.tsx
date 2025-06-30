@@ -21,6 +21,8 @@ import {
 } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
 import { Context } from "@/router";
+import { authClient } from "@/lib/auth-client";
+import { getCurrentUser } from "@/server/middleware";
 
 // const inter = Inter({ subsets: ["latin"], variable: "--inter" });
 // const tiroBangla = Tiro_Bangla({
@@ -83,7 +85,22 @@ export const Route = createRootRouteWithContext<Context>()({
 		],
 	}),
 	component: RootLayout,
-	loader(ctx) {
+	async beforeLoad({ abortController }) {
+		const { data, error } = await getCurrentUser({
+			signal: abortController.signal,
+		});
+		if (error) {
+			return {
+				user: null,
+				isAuthenticated: false,
+			};
+		}
+		return {
+			user: data?.user,
+			isAuthenticated: true,
+		};
+	},
+	loader() {
 		return {
 			dehydratedState: dehydrate(queryClient),
 		};
