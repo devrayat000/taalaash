@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && tsc --noEmit",
-		"start": "node .output/server/index.mjs",
+		"start": "node -r dotenv/config .output/server/index.mjs",
 		"postbuild": "node --loader ts-node/esm --experimental-specifier-resolution node migrate.ts",
 		"test:demo": "node --loader ts-node/esm --experimental-specifier-resolution node demo.ts",
 		"save:index": "node --loader ts-node/esm --experimental-fetch --experimental-specifier-resolution node save-index.ts"
@@ -79,6 +79,7 @@
 		"@types/node": "^24.0.3",
 		"@types/react": "^19.1.8",
 		"@types/react-dom": "^19.1.6",
+		"dotenv": "17.0.0",
 		"drizzle-kit": "^0.31.1",
 		"eslint": "^9.29.0",
 		"postcss": "^8.5.6",
