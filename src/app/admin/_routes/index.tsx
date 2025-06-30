@@ -17,7 +17,7 @@ import { Heading } from "@/components/ui/heading";
 // // import { runReport } from "@/server/miscellaneous/service/get-analytics";
 // import DailyActiveUserBar from "./~components/daily-active-user-count";
 import CountCard from "./~components/count-card";
-import { useSuspenseQueries } from "@tanstack/react-query";
+import { useQueries, useSuspenseQueries } from "@tanstack/react-query";
 import { getUserCount } from "@/server/user/service";
 import { countBooks } from "@/server/book/service";
 import { countChapters } from "@/server/chapter/service";
@@ -30,43 +30,24 @@ interface DashboardPageProps {
 	};
 }
 
-const DashboardPage = () => {
+export const Route = createFileRoute("/admin/_routes/")({
+	component: DashboardPage,
+	async loader({ context }) {
+		return {
+			userCount: await getUserCount(),
+			bookAuthorCount: await countBooks(),
+			chapterCount: await countChapters(),
+			postCount: await countPosts(),
+			subjectCount: await countSubjects(),
+		};
+	},
+});
+
+function DashboardPage() {
 	// const report = await runReport();
 
 	const { userCount, bookAuthorCount, chapterCount, postCount, subjectCount } =
-		useSuspenseQueries({
-			queries: [
-				{
-					queryKey: ["user_count"],
-					queryFn: () => getUserCount(),
-				},
-				{
-					queryKey: ["book_count"],
-					queryFn: () => countBooks(),
-				},
-				{
-					queryKey: ["chapter_count"],
-					queryFn: () => countChapters(),
-				},
-				{
-					queryKey: ["post_count"],
-					queryFn: () => countPosts(),
-				},
-				{
-					queryKey: ["subject_count"],
-					queryFn: () => countSubjects(),
-				},
-			],
-			combine(result) {
-				return {
-					userCount: result[0].data,
-					bookAuthorCount: result[1].data,
-					chapterCount: result[2].data,
-					postCount: result[3].data,
-					subjectCount: result[4].data,
-				};
-			},
-		});
+		Route.useLoaderData();
 
 	return (
 		<div className="flex-col">
@@ -107,12 +88,4 @@ const DashboardPage = () => {
 			</div>
 		</div>
 	);
-};
-
-// export const revalidate = 1800;
-export const runtime = "nodejs";
-// export const dynamic = "force-static";
-
-export const Route = createFileRoute("/admin/_routes/")({
-	component: DashboardPage,
-});
+}

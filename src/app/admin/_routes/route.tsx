@@ -3,7 +3,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment } from "react";
 
-async function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<Fragment>
 			{/* <Navbar /> */}
