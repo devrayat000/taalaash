@@ -1,21 +1,17 @@
-import Navbar from "@/app/admin/(routes)/components/navbar";
-import { ThemeProvider } from "@/providers/theme-provider";
+// import Navbar from "@/app/admin/_routes/~components/navbar";
+// import { ThemeProvider } from "@/providers/theme-provider";
+import { createFileRoute } from "@tanstack/react-router";
+import { Fragment } from "react";
 
-async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <Navbar />
-      {children}
-    </ThemeProvider>
-  );
+async function DashboardLayout({ children }: { children: React.ReactNode }) {
+	return (
+		<Fragment>
+			{/* <Navbar /> */}
+			{children}
+		</Fragment>
+	);
 }
 
-import { createFileRoute } from '@tanstack/react-router';
-
 export const Route = createFileRoute("/admin/_routes")({
-  component: DashboardLayout
+	component: DashboardLayout,
 });

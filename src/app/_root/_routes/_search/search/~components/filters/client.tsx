@@ -9,7 +9,7 @@ import { useAppForm, formContext } from "./form";
 import { useQueryClient } from "@tanstack/react-query";
 import { getBooksBySubject } from "./actions";
 
-type FilterItem = { value: string };
+type FilterItem = { value: string; count: number };
 
 export interface FilterClientProps {
 	initialData?: {
@@ -65,17 +65,20 @@ export default function FilterClient({ initialData }: FilterClientProps) {
 	return (
 		<form.AppForm>
 			<form.AppField name="subjects">
-				{() => <SubjectFilter subjects={initialData?.subjects} />}
+				{() => <SubjectFilter subjects={initialData?.subjects ?? []} />}
 			</form.AppField>
 			<form.AppField name="books">
 				{() => (
-					<BookFilter books={initialData?.books} query={searchParams.query} />
+					<BookFilter
+						books={initialData?.books ?? []}
+						query={searchParams.query}
+					/>
 				)}
 			</form.AppField>
 			<form.AppField name="chapters">
 				{() => (
 					<ChapterFilter
-						chapters={initialData?.chapters}
+						chapters={initialData?.chapters ?? []}
 						query={searchParams.query}
 					/>
 				)}
