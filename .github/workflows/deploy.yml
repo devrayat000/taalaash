@@ -30,8 +30,21 @@ jobs:
           username: ${{ secrets.DO_SSH_USER }}
           port: ${{ secrets.DO_SSH_PORT }}
           key: ${{ secrets.DO_SSH_KEY }}
-          source: ".output,.env"
+          source: ".output"
           target: "${{ secrets.DO_DEPLOY_PATH }}"
+
+      - name: Write .env.production to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_SSH_HOST }}
+          username: ${{ secrets.DO_SSH_USER }}
+          port: ${{ secrets.DO_SSH_PORT }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cat > ${{ secrets.DO_DEPLOY_PATH }}/.env << 'EOF'
+            ${{ secrets.ENV_PRODUCTION }}
+            EOF
+
 
       - name: Restart App on Server
         uses: appleboy/ssh-action@v1.0.3
