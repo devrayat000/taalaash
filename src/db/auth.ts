@@ -1,6 +1,4 @@
 import { timestamp, pgTable, text, boolean } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { bookmark } from "./schema";
 
 // User table
 export const users = pgTable("user", {
@@ -119,24 +117,3 @@ export const institutionalInfo = pgTable("institutional_infos", {
 	hscYear: text("hscYear").notNull(),
 	college: text("college").notNull(),
 });
-
-// Define all relations AFTER all table declarations
-export const userRelations = relations(users, ({ many }) => ({
-	bookmarks: many(bookmark),
-	sessions: many(sessions),
-	accounts: many(accounts),
-}));
-
-export const sessionRelations = relations(sessions, ({ one }) => ({
-	user: one(users, {
-		fields: [sessions.userId],
-		references: [users.id],
-	}),
-}));
-
-export const accountRelations = relations(accounts, ({ one }) => ({
-	user: one(users, {
-		fields: [accounts.userId],
-		references: [users.id],
-	}),
-}));
