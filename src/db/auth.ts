@@ -30,12 +30,6 @@ export const users = pgTable("user", {
 		.defaultNow(),
 });
 
-export const userRelations = relations(users, ({ many }) => ({
-	bookmarks: many(bookmark),
-	sessions: many(sessions),
-	accounts: many(accounts),
-}));
-
 // Session table
 export const sessions = pgTable("session", {
 	id: text("id").notNull().primaryKey(),
@@ -60,13 +54,6 @@ export const sessions = pgTable("session", {
 		.notNull()
 		.defaultNow(),
 });
-
-export const sessionRelations = relations(sessions, ({ one }) => ({
-	user: one(users, {
-		fields: [sessions.userId],
-		references: [users.id],
-	}),
-}));
 
 // Account table
 export const accounts = pgTable("account", {
@@ -103,13 +90,6 @@ export const accounts = pgTable("account", {
 		.defaultNow(),
 });
 
-export const accountRelations = relations(accounts, ({ one }) => ({
-	user: one(users, {
-		fields: [accounts.userId],
-		references: [users.id],
-	}),
-}));
-
 // Verification table
 export const verifications = pgTable("verification", {
 	id: text("id").notNull().primaryKey(),
@@ -130,7 +110,7 @@ export const verifications = pgTable("verification", {
 		.defaultNow(),
 });
 
-// Keep institutional info if still needed
+// Institutional info table
 export const institutionalInfo = pgTable("institutional_infos", {
 	userId: text("userId")
 		.notNull()
@@ -139,3 +119,24 @@ export const institutionalInfo = pgTable("institutional_infos", {
 	hscYear: text("hscYear").notNull(),
 	college: text("college").notNull(),
 });
+
+// Define all relations AFTER all table declarations
+export const userRelations = relations(users, ({ many }) => ({
+	bookmarks: many(bookmark),
+	sessions: many(sessions),
+	accounts: many(accounts),
+}));
+
+export const sessionRelations = relations(sessions, ({ one }) => ({
+	user: one(users, {
+		fields: [sessions.userId],
+		references: [users.id],
+	}),
+}));
+
+export const accountRelations = relations(accounts, ({ one }) => ({
+	user: one(users, {
+		fields: [accounts.userId],
+		references: [users.id],
+	}),
+}));
