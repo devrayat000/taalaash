@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { users, sessions, accounts } from "./auth";
 import { relations } from "drizzle-orm";
+export * from "./auth";
 
 export const subject = pgTable("subjects", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -123,8 +124,6 @@ export const bookmarkRelations = relations(bookmark, ({ one }) => ({
 		references: [post.id],
 	}),
 }));
-
-export * from "./auth";
 
 export const userRelations = relations(users, ({ many }) => ({
 	bookmarks: many(bookmark),
