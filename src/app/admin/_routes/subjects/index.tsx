@@ -1,32 +1,37 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 
-// import { ServerTableStoreProvider } from "@/providers/server-table-provider";
-// import { SubjectsClient } from "./~components/client";
-// import { searchParamsSchema } from "@/lib/schemas";
-// import { getSubjects } from "@/server/subject/service";
+import { ServerTableStoreProvider } from "@/providers/server-table-provider";
+import { SubjectsClient } from "./~components/client";
+import { searchParamsSchema } from "@/lib/schemas";
+import { getSubjects } from "@/server/subject/service";
+import { useQuery } from "@tanstack/react-query";
 
-const SizesPage = async ({
-	searchParams,
-}: {
-	searchParams: Record<string, string>;
-}) => {
-	// const { page, limit, query } = searchParamsSchema.parse(searchParams);
+const SizesPage = async () => {
+	const search = useSearch({ from: "/admin/_routes/subjects/" });
+	const { data } = useQuery({
+		queryKey: ["subjects", search],
+		queryFn: () => getSubjects({ data: search }),
+	});
 
 	return (
 		<div className="flex-col">
 			<div className="flex-1 space-y-4 p-8 pt-6">
-				{/* <ServerTableStoreProvider
-          initialData={await getSubjects({ page, limit, query })}
-        >
-          <SubjectsClient />
-        </ServerTableStoreProvider> */}
+				<ServerTableStoreProvider initialData={data!}>
+					<SubjectsClient />
+				</ServerTableStoreProvider>
 			</div>
 		</div>
 	);
 };
 
-export const dynamic = true;
-
 export const Route = createFileRoute("/admin/_routes/subjects/")({
 	component: SizesPage,
+	validateSearch: searchParamsSchema,
+	loaderDeps: (opts) => opts.search,
+	async loader({ context, deps }) {
+		await context.queryClient.ensureQueryData({
+			queryKey: ["subjects", deps],
+			queryFn: () => getSubjects({ data: deps }),
+		});
+	},
 });

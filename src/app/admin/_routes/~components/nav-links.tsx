@@ -1,62 +1,61 @@
-// "use client";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import LogoutButton from "./logout-button";
+import { Link, useLocation } from "@tanstack/react-router";
 
-// import Link from "next/link";
-// import { usePathname } from "next/navigation";
+class NavPath {
+	constructor(
+		public href: string,
+		public label: string,
+	) {}
 
-// import { cn } from "@/lib/utils";
-// import { Button } from "@/components/ui/button";
-// import { Separator } from "@/components/ui/separator";
-// import LogoutButton from "./logout-button";
+	active = (pathname: string) => {
+		return pathname === this.href;
+	};
+}
 
-// class NavPath {
-//   constructor(public href: string, public label: string) {}
+export default function NavLinks({
+	className,
+	...props
+}: React.HTMLAttributes<HTMLElement>) {
+	const pathname = useLocation().pathname;
 
-//   active = (pathname: string) => {
-//     return pathname === this.href;
-//   };
-// }
+	const routes = [
+		new NavPath(`/admin`, "Dashboard"),
+		new NavPath(`/admin/subjects`, "Subjects"),
+		new NavPath(`/admin/books`, "Books"),
+		new NavPath(`/admin/chapters`, "Chapters"),
+		new NavPath(`/admin/posts`, "Posts"),
+	];
 
-// export default function NavLinks({
-//   className,
-//   ...props
-// }: React.HTMLAttributes<HTMLElement>) {
-//   const pathname = usePathname();
+	return (
+		<nav
+			className={cn(
+				"flex flex-col md:flex-row items-stretch md:items-center gap-y-2 gap-x-2 lg:gap-x-3",
+				className,
+			)}
+			{...props}
+		>
+			{routes.map((route) => (
+				<Button
+					asChild
+					key={route.href}
+					variant={route.active(pathname) ? "outline" : "ghost"}
+				>
+					<Link
+						to={route.href}
+						// className={cn(
+						//   "text-sm font-medium transition-colors hover:text-primary",
 
-//   const routes = [
-//     new NavPath(`/admin`, "Dashboard"),
-//     new NavPath(`/admin/subjects`, "Subjects"),
-//     new NavPath(`/admin/books`, "Books"),
-//     new NavPath(`/admin/chapters`, "Chapters"),
-//     new NavPath(`/admin/posts`, "Posts"),
-//   ];
-
-//   return (
-//     <nav
-//       className={cn(
-//         "flex flex-col md:flex-row items-stretch md:items-center gap-y-2 gap-x-2 lg:gap-x-3",
-//         className
-//       )}
-//       {...props}
-//     >
-//       {routes.map((route) => (
-//         <Button
-//           asChild
-//           key={route.href}
-//           variant={route.active(pathname) ? "outline" : "ghost"}
-//         >
-//           <Link
-//             href={route.href}
-//             // className={cn(
-//             //   "text-sm font-medium transition-colors hover:text-primary",
-
-//             //     ? "text-black dark:text-white"
-//             //     : "text-muted-foreground"
-//             // )}
-//           >
-//             {route.label}
-//           </Link>
-//         </Button>
-//       ))}
-//     </nav>
-//   );
-// }
+						//     ? "text-black dark:text-white"
+						//     : "text-muted-foreground"
+						// )}
+					>
+						{route.label}
+					</Link>
+				</Button>
+			))}
+		</nav>
+	);
+}

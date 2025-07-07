@@ -118,6 +118,11 @@ export const auth = betterAuth({
 			verification: schema.verifications,
 		}, // your Drizzle schema
 	}),
+	emailAndPassword: {
+		enabled: true,
+		autoSignIn: true,
+		requireEmailVerification: false,
+	},
 	plugins: [reactStartCookies(), admin()],
 	socialProviders: {
 		google: {

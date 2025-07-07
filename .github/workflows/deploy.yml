@@ -58,7 +58,10 @@ jobs:
             export PATH="$NVM_BIN:$PATH"
             npm install -g pm2
             cd ${{ secrets.DO_DEPLOY_PATH }}
-            pm2 stop taalaash-app || true
-            pm2 delete taalaash-app || true
-            PORT=6969 pm2 start "node --env-file=.env .output/server/index.mjs" --name taalaash-app
+            if pm2 list | grep -q taalaash-app; then
+              PORT=6969 pm2 reload taalaash-app
+            else
+              PORT=6969 pm2 start "node --env-file=.env .output/server/index.mjs" --name taalaash-app
+            fi
+
 

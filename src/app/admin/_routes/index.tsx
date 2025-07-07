@@ -33,12 +33,20 @@ interface DashboardPageProps {
 export const Route = createFileRoute("/admin/_routes/")({
 	component: DashboardPage,
 	async loader({ context }) {
+		const [userCount, bookAuthorCount, chapterCount, postCount, subjectCount] =
+			await Promise.all([
+				getUserCount(),
+				countBooks(),
+				countChapters(),
+				countPosts(),
+				countSubjects(),
+			]);
 		return {
-			userCount: await getUserCount(),
-			bookAuthorCount: await countBooks(),
-			chapterCount: await countChapters(),
-			postCount: await countPosts(),
-			subjectCount: await countSubjects(),
+			userCount,
+			bookAuthorCount,
+			chapterCount,
+			postCount,
+			subjectCount,
 		};
 	},
 });
