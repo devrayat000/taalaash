@@ -42,6 +42,7 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
             cd ${{ secrets.DO_DEPLOY_PATH }}
-            pm2 stop taalaash-app || true
-            pm2 delete taalaash-app || true
-            PORT=6969 pm2 start "node .output/server/index.mjs" --name taalaash-app
+            /root/.nvm/versions/node/v22.14.0/bin/pm2 stop taalaash-app || true
+            /root/.nvm/versions/node/v22.14.0/bin/pm2 delete taalaash-app || true
+            PORT=6969 /root/.nvm/versions/node/v22.14.0/bin/pm2 start "node .output/server/index.mjs" --name taalaash-app
+
