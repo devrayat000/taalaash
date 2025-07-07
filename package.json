@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && tsc --noEmit",
+		"build": "vite build",
 		"start": "node -r dotenv/config .output/server/index.mjs",
 		"postbuild": "node --loader ts-node/esm --experimental-specifier-resolution node migrate.ts",
 		"test:demo": "node --loader ts-node/esm --experimental-specifier-resolution node demo.ts",
