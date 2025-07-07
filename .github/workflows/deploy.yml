@@ -1,0 +1,47 @@
+name: Deploy App to KVM
+
+on:
+  push:
+    branches: [ master ] # or your branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.17
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Next.js App
+        run: bun run build
+
+      - name: Copy Files to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_SSH_HOST }}
+          username: ${{ secrets.DO_SSH_USER }}
+          port: ${{ secrets.DO_SSH_PORT }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          source: ".output"
+          target: "${{ secrets.DO_DEPLOY_PATH }}"
+
+      - name: Restart App on Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_SSH_HOST }}
+          username: ${{ secrets.DO_SSH_USER }}
+          port: ${{ secrets.DO_SSH_PORT }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DO_DEPLOY_PATH }}
+            pm2 stop taalaash-app || true
+            pm2 delete taalaash-app || true
+            PORT=6969 pm2 start "node .output/server/index.mjs" --name taalaash-app
