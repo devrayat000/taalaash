@@ -30,7 +30,12 @@ import { Route as AdminRoutesSubjectsSubjectIdRouteImport } from './app/admin/_r
 import { Route as AdminRoutesPostsPostIdRouteImport } from './app/admin/_routes/posts/$postId'
 import { Route as AdminRoutesChaptersChapterIdRouteImport } from './app/admin/_routes/chapters/$chapterId'
 import { Route as AdminRoutesBooksBookIdRouteImport } from './app/admin/_routes/books/$bookId'
+import { Route as RootRoutesMainWhatsNewRouteImport } from './app/_root/_routes/_main/whats-new'
+import { Route as RootRoutesMainSubscriptionsRouteImport } from './app/_root/_routes/_main/subscriptions'
+import { Route as RootRoutesMainSearchHistoryRouteImport } from './app/_root/_routes/_main/search-history'
+import { Route as RootRoutesMainMyFootprintsRouteImport } from './app/_root/_routes/_main/my-footprints'
 import { Route as RootRoutesMainInitRouteImport } from './app/_root/_routes/_main/init'
+import { Route as RootRoutesMainContentGalleryRouteImport } from './app/_root/_routes/_main/content-gallery'
 import { Route as RootRoutesMainBookmarksRouteImport } from './app/_root/_routes/_main/bookmarks'
 import { Route as RootRoutesMainAboutRouteImport } from './app/_root/_routes/_main/about'
 import { Route as RootRoutesSearchSearchIndexRouteImport } from './app/_root/_routes/_search/search/index'
@@ -133,11 +138,40 @@ const AdminRoutesBooksBookIdRoute = AdminRoutesBooksBookIdRouteImport.update({
   path: '/books/$bookId',
   getParentRoute: () => AdminRoutesRouteRoute,
 } as any)
+const RootRoutesMainWhatsNewRoute = RootRoutesMainWhatsNewRouteImport.update({
+  id: '/whats-new',
+  path: '/whats-new',
+  getParentRoute: () => RootRoutesMainRouteRoute,
+} as any)
+const RootRoutesMainSubscriptionsRoute =
+  RootRoutesMainSubscriptionsRouteImport.update({
+    id: '/subscriptions',
+    path: '/subscriptions',
+    getParentRoute: () => RootRoutesMainRouteRoute,
+  } as any)
+const RootRoutesMainSearchHistoryRoute =
+  RootRoutesMainSearchHistoryRouteImport.update({
+    id: '/search-history',
+    path: '/search-history',
+    getParentRoute: () => RootRoutesMainRouteRoute,
+  } as any)
+const RootRoutesMainMyFootprintsRoute =
+  RootRoutesMainMyFootprintsRouteImport.update({
+    id: '/my-footprints',
+    path: '/my-footprints',
+    getParentRoute: () => RootRoutesMainRouteRoute,
+  } as any)
 const RootRoutesMainInitRoute = RootRoutesMainInitRouteImport.update({
   id: '/init',
   path: '/init',
   getParentRoute: () => RootRoutesMainRouteRoute,
 } as any)
+const RootRoutesMainContentGalleryRoute =
+  RootRoutesMainContentGalleryRouteImport.update({
+    id: '/content-gallery',
+    path: '/content-gallery',
+    getParentRoute: () => RootRoutesMainRouteRoute,
+  } as any)
 const RootRoutesMainBookmarksRoute = RootRoutesMainBookmarksRouteImport.update({
   id: '/bookmarks',
   path: '/bookmarks',
@@ -167,7 +201,12 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminRoutesIndexRoute
   '/about': typeof RootRoutesMainAboutRoute
   '/bookmarks': typeof RootRoutesMainBookmarksRoute
+  '/content-gallery': typeof RootRoutesMainContentGalleryRoute
   '/init': typeof RootRoutesMainInitRoute
+  '/my-footprints': typeof RootRoutesMainMyFootprintsRoute
+  '/search-history': typeof RootRoutesMainSearchHistoryRoute
+  '/subscriptions': typeof RootRoutesMainSubscriptionsRoute
+  '/whats-new': typeof RootRoutesMainWhatsNewRoute
   '/admin/books/$bookId': typeof AdminRoutesBooksBookIdRoute
   '/admin/chapters/$chapterId': typeof AdminRoutesChaptersChapterIdRoute
   '/admin/posts/$postId': typeof AdminRoutesPostsPostIdRoute
@@ -186,7 +225,12 @@ export interface FileRoutesByTo {
   '/admin/signin': typeof AdminAuthSigninRoute
   '/about': typeof RootRoutesMainAboutRoute
   '/bookmarks': typeof RootRoutesMainBookmarksRoute
+  '/content-gallery': typeof RootRoutesMainContentGalleryRoute
   '/init': typeof RootRoutesMainInitRoute
+  '/my-footprints': typeof RootRoutesMainMyFootprintsRoute
+  '/search-history': typeof RootRoutesMainSearchHistoryRoute
+  '/subscriptions': typeof RootRoutesMainSubscriptionsRoute
+  '/whats-new': typeof RootRoutesMainWhatsNewRoute
   '/admin/books/$bookId': typeof AdminRoutesBooksBookIdRoute
   '/admin/chapters/$chapterId': typeof AdminRoutesChaptersChapterIdRoute
   '/admin/posts/$postId': typeof AdminRoutesPostsPostIdRoute
@@ -212,7 +256,12 @@ export interface FileRoutesById {
   '/admin/_routes/': typeof AdminRoutesIndexRoute
   '/_root/_routes/_main/about': typeof RootRoutesMainAboutRoute
   '/_root/_routes/_main/bookmarks': typeof RootRoutesMainBookmarksRoute
+  '/_root/_routes/_main/content-gallery': typeof RootRoutesMainContentGalleryRoute
   '/_root/_routes/_main/init': typeof RootRoutesMainInitRoute
+  '/_root/_routes/_main/my-footprints': typeof RootRoutesMainMyFootprintsRoute
+  '/_root/_routes/_main/search-history': typeof RootRoutesMainSearchHistoryRoute
+  '/_root/_routes/_main/subscriptions': typeof RootRoutesMainSubscriptionsRoute
+  '/_root/_routes/_main/whats-new': typeof RootRoutesMainWhatsNewRoute
   '/admin/_routes/books/$bookId': typeof AdminRoutesBooksBookIdRoute
   '/admin/_routes/chapters/$chapterId': typeof AdminRoutesChaptersChapterIdRoute
   '/admin/_routes/posts/$postId': typeof AdminRoutesPostsPostIdRoute
@@ -234,7 +283,12 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/about'
     | '/bookmarks'
+    | '/content-gallery'
     | '/init'
+    | '/my-footprints'
+    | '/search-history'
+    | '/subscriptions'
+    | '/whats-new'
     | '/admin/books/$bookId'
     | '/admin/chapters/$chapterId'
     | '/admin/posts/$postId'
@@ -253,7 +307,12 @@ export interface FileRouteTypes {
     | '/admin/signin'
     | '/about'
     | '/bookmarks'
+    | '/content-gallery'
     | '/init'
+    | '/my-footprints'
+    | '/search-history'
+    | '/subscriptions'
+    | '/whats-new'
     | '/admin/books/$bookId'
     | '/admin/chapters/$chapterId'
     | '/admin/posts/$postId'
@@ -278,7 +337,12 @@ export interface FileRouteTypes {
     | '/admin/_routes/'
     | '/_root/_routes/_main/about'
     | '/_root/_routes/_main/bookmarks'
+    | '/_root/_routes/_main/content-gallery'
     | '/_root/_routes/_main/init'
+    | '/_root/_routes/_main/my-footprints'
+    | '/_root/_routes/_main/search-history'
+    | '/_root/_routes/_main/subscriptions'
+    | '/_root/_routes/_main/whats-new'
     | '/admin/_routes/books/$bookId'
     | '/admin/_routes/chapters/$chapterId'
     | '/admin/_routes/posts/$postId'
@@ -453,11 +517,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoutesBooksBookIdRouteImport
       parentRoute: typeof AdminRoutesRouteRoute
     }
+    '/_root/_routes/_main/whats-new': {
+      id: '/_root/_routes/_main/whats-new'
+      path: '/whats-new'
+      fullPath: '/whats-new'
+      preLoaderRoute: typeof RootRoutesMainWhatsNewRouteImport
+      parentRoute: typeof RootRoutesMainRouteRoute
+    }
+    '/_root/_routes/_main/subscriptions': {
+      id: '/_root/_routes/_main/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof RootRoutesMainSubscriptionsRouteImport
+      parentRoute: typeof RootRoutesMainRouteRoute
+    }
+    '/_root/_routes/_main/search-history': {
+      id: '/_root/_routes/_main/search-history'
+      path: '/search-history'
+      fullPath: '/search-history'
+      preLoaderRoute: typeof RootRoutesMainSearchHistoryRouteImport
+      parentRoute: typeof RootRoutesMainRouteRoute
+    }
+    '/_root/_routes/_main/my-footprints': {
+      id: '/_root/_routes/_main/my-footprints'
+      path: '/my-footprints'
+      fullPath: '/my-footprints'
+      preLoaderRoute: typeof RootRoutesMainMyFootprintsRouteImport
+      parentRoute: typeof RootRoutesMainRouteRoute
+    }
     '/_root/_routes/_main/init': {
       id: '/_root/_routes/_main/init'
       path: '/init'
       fullPath: '/init'
       preLoaderRoute: typeof RootRoutesMainInitRouteImport
+      parentRoute: typeof RootRoutesMainRouteRoute
+    }
+    '/_root/_routes/_main/content-gallery': {
+      id: '/_root/_routes/_main/content-gallery'
+      path: '/content-gallery'
+      fullPath: '/content-gallery'
+      preLoaderRoute: typeof RootRoutesMainContentGalleryRouteImport
       parentRoute: typeof RootRoutesMainRouteRoute
     }
     '/_root/_routes/_main/bookmarks': {
@@ -498,14 +597,24 @@ declare module '@tanstack/react-start/server' {
 interface RootRoutesMainRouteRouteChildren {
   RootRoutesMainAboutRoute: typeof RootRoutesMainAboutRoute
   RootRoutesMainBookmarksRoute: typeof RootRoutesMainBookmarksRoute
+  RootRoutesMainContentGalleryRoute: typeof RootRoutesMainContentGalleryRoute
   RootRoutesMainInitRoute: typeof RootRoutesMainInitRoute
+  RootRoutesMainMyFootprintsRoute: typeof RootRoutesMainMyFootprintsRoute
+  RootRoutesMainSearchHistoryRoute: typeof RootRoutesMainSearchHistoryRoute
+  RootRoutesMainSubscriptionsRoute: typeof RootRoutesMainSubscriptionsRoute
+  RootRoutesMainWhatsNewRoute: typeof RootRoutesMainWhatsNewRoute
   RootRoutesMainIndexRoute: typeof RootRoutesMainIndexRoute
 }
 
 const RootRoutesMainRouteRouteChildren: RootRoutesMainRouteRouteChildren = {
   RootRoutesMainAboutRoute: RootRoutesMainAboutRoute,
   RootRoutesMainBookmarksRoute: RootRoutesMainBookmarksRoute,
+  RootRoutesMainContentGalleryRoute: RootRoutesMainContentGalleryRoute,
   RootRoutesMainInitRoute: RootRoutesMainInitRoute,
+  RootRoutesMainMyFootprintsRoute: RootRoutesMainMyFootprintsRoute,
+  RootRoutesMainSearchHistoryRoute: RootRoutesMainSearchHistoryRoute,
+  RootRoutesMainSubscriptionsRoute: RootRoutesMainSubscriptionsRoute,
+  RootRoutesMainWhatsNewRoute: RootRoutesMainWhatsNewRoute,
   RootRoutesMainIndexRoute: RootRoutesMainIndexRoute,
 }
 

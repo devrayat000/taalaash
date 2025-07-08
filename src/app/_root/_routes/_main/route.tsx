@@ -1,18 +1,15 @@
 function MainLayout() {
 	return (
-		<Fragment>
+		<div className="min-h-screen bg-background">
 			<Header />
-			<div className="relative z-10">
+			<main className="relative">
 				<Outlet />
-			</div>
-			<Footer className="absolute bottom-0" />
-		</Fragment>
+			</main>
+		</div>
 	);
 }
 
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import Footer from "../../~components/footer";
-import { Fragment } from "react/jsx-runtime";
 import Header from "../../~components/header";
 
 export const Route = createFileRoute("/_root/_routes/_main")({

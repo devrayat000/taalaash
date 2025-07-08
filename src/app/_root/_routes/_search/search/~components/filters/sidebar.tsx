@@ -1,8 +1,9 @@
 import React from "react";
 import FilterClient, { FilterClientProps } from "./client";
 import { Button } from "@/components/ui/button";
-import { SearchSchema } from "../searchSchema";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSearch } from "@tanstack/react-router";
+import { SlidersHorizontal } from "lucide-react";
 
 export default function FilterSidebar({
 	initialData,
@@ -11,22 +12,32 @@ export default function FilterSidebar({
 }) {
 	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
 	return (
-		<aside className="lg:basis-80 hidden lg:mt-3 lg:block border-r border-border min-h-[calc(100vh-11rem)]">
-			<form className="p-4">
-				<h3 className="text-2xl font-semibold">Filters</h3>
-				<input type="hidden" name="query" value={searchParams.query} />
-				{searchParams?.page && (
-					<input type="hidden" name="page" value={searchParams?.page} />
-				)}
+		<Card className="w-full">
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2 text-lg">
+					<SlidersHorizontal className="h-5 w-5 text-[#00B894]" />
+					Filters
+				</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<form className="space-y-4">
+					<input type="hidden" name="query" value={searchParams.query} />
+					{searchParams?.page && (
+						<input type="hidden" name="page" value={searchParams?.page} />
+					)}
 
-				<div>
-					<FilterClient initialData={initialData} />
-				</div>
+					<div className="space-y-4">
+						<FilterClient initialData={initialData} />
+					</div>
 
-				<Button type="submit" className="mt-5 w-full">
-					Apply Filters
-				</Button>
-			</form>
-		</aside>
+					<Button
+						type="submit"
+						className="w-full bg-[#00B894] hover:bg-[#00B894]/90"
+					>
+						Apply Filters
+					</Button>
+				</form>
+			</CardContent>
+		</Card>
 	);
 }
