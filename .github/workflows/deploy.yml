@@ -30,7 +30,7 @@ jobs:
           username: ${{ secrets.DO_SSH_USER }}
           port: ${{ secrets.DO_SSH_PORT }}
           key: ${{ secrets.DO_SSH_KEY }}
-          source: ".output"
+          source: ".output,www.mjs"
           target: "${{ secrets.DO_DEPLOY_PATH }}"
 
       - name: Write .env.production to VM
@@ -61,7 +61,7 @@ jobs:
             if pm2 list | grep -q taalaash-app; then
               PORT=6969 pm2 reload taalaash-app
             else
-              PORT=6969 pm2 start "node --env-file=.env .output/server/index.mjs" --name taalaash-app
+              PORT=6969 pm2 start "node --env-file=.env www.mjs" --name taalaash-app
             fi
 
 
