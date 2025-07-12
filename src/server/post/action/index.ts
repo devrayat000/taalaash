@@ -35,6 +35,7 @@ export const createPost = createServerFn({ method: "POST" })
 			.insert(post)
 			.values(Array.isArray(params) ? params : [params])
 			.returning({ id: post.id });
+		return results;
 
 		// if (Array.isArray(params)) {
 		// 	await saveManyIndicesByIds(results.map((r) => r.id));

@@ -19,22 +19,6 @@ const PostsPage = () => {
 
 	return (
 		<div className="flex-col">
-			<form action={(formData) => void recognize({ data: formData })}>
-				<div className="flex items-center justify-between mb-4">
-					<input
-						id="fileInput"
-						type="file"
-						name="file"
-						accept="image/*"
-						// className="hidden"
-					/>
-				</div>
-				<div className="flex items-center justify-between mb-4">
-					<Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-						Recognize Text
-					</Button>
-				</div>
-			</form>
 			<div className="flex-1 space-y-4 p-8 pt-6">
 				<ServerTableStoreProvider initialData={data!}>
 					<PostsClient />
