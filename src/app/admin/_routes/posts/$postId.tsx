@@ -29,6 +29,7 @@ const PostPage = async ({ params }: { params: { postId: string } }) => {
 	//     chapters: await getChaptersByBooks(null, post.book!.id),
 	//   };
 	// }
+
 	return (
 		<div className="flex-col">
 			<div className="flex-1 space-y-4 p-8 pt-6" suppressHydrationWarning>

@@ -120,15 +120,17 @@ function LandingPage() {
 						</div>
 						<div className="flex justify-center flex-wrap gap-2">
 							{popularSearches.map((search) => (
-								<Link key={search} to="/search" search={{ query: search }}>
-									<Button
-										variant="outline"
-										size="sm"
-										className="text-xs bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-									>
+								<Button
+									key={search}
+									variant="outline"
+									size="sm"
+									className="text-xs bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+									asChild
+								>
+									<Link to="/search" search={{ query: search }}>
 										{search}
-									</Button>
-								</Link>
+									</Link>
+								</Button>
 							))}
 						</div>
 					</div>
