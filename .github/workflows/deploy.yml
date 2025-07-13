@@ -26,6 +26,7 @@ jobs:
       - name: Copy Files to Server
         uses: appleboy/scp-action@v0.1.7
         with:
+          overwrite: true
           host: ${{ secrets.DO_SSH_HOST }}
           username: ${{ secrets.DO_SSH_USER }}
           port: ${{ secrets.DO_SSH_PORT }}
