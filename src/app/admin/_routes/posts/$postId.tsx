@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { Suspense } from "react";
 
@@ -29,6 +29,14 @@ const PostPage = () => {
 
 export const Route = createFileRoute("/admin/_routes/posts/$postId")({
 	component: PostPage,
+	beforeLoad({ params }) {
+		if (params.postId === "new") {
+			throw redirect({
+				to: "/admin/posts/new",
+				replace: true,
+			});
+		}
+	},
 	async loader({ context, params }) {
 		if (params.postId !== "new" && params.postId !== "bulk") {
 			const post = await context.queryClient.ensureQueryData({

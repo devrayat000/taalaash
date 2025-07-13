@@ -34,20 +34,6 @@ export const columns: ColumnDef<PostColumn>[] = [
 		enableHiding: false,
 	},
 	{
-		accessorKey: "text",
-		header: "Question/Text",
-		enableResizing: false,
-		size: 300,
-		maxSize: 350,
-		cell: ({ renderValue }) => (
-			<p className="line-clamp-2 text-ellipsis w-[95%]">
-				{renderValue<string>().slice(0, 75)}
-				<br />
-				{renderValue<string>().slice(75, 150)}
-			</p>
-		),
-	},
-	{
 		accessorKey: "chapter.name",
 		enableSorting: true,
 		enableColumnFilter: true,
@@ -102,6 +88,18 @@ export const columns: ColumnDef<PostColumn>[] = [
 				}).format(new Date(renderValue<string>()))}
 			</time>
 		),
+	},
+	{
+		accessorKey: "page",
+		header: "Page No.",
+		enableResizing: false,
+		// cell: ({ renderValue }) => (
+		// 	<p className="line-clamp-2 text-ellipsis w-[95%]">
+		// 		{renderValue<string>().slice(0, 75)}
+		// 		<br />
+		// 		{renderValue<string>().slice(75, 150)}
+		// 	</p>
+		// ),
 	},
 	{
 		id: "actions",

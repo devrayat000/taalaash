@@ -27,6 +27,7 @@ import { Route as AdminRoutesChaptersIndexRouteImport } from './app/admin/_route
 import { Route as AdminRoutesBooksIndexRouteImport } from './app/admin/_routes/books/index'
 import { Route as RootRoutesMainIndexRouteImport } from './app/_root/_routes/_main/index'
 import { Route as AdminRoutesSubjectsSubjectIdRouteImport } from './app/admin/_routes/subjects/$subjectId'
+import { Route as AdminRoutesPostsNewRouteImport } from './app/admin/_routes/posts/new'
 import { Route as AdminRoutesPostsPostIdRouteImport } from './app/admin/_routes/posts/$postId'
 import { Route as AdminRoutesChaptersChapterIdRouteImport } from './app/admin/_routes/chapters/$chapterId'
 import { Route as AdminRoutesBooksBookIdRouteImport } from './app/admin/_routes/books/$bookId'
@@ -122,6 +123,11 @@ const AdminRoutesSubjectsSubjectIdRoute =
     path: '/subjects/$subjectId',
     getParentRoute: () => AdminRoutesRouteRoute,
   } as any)
+const AdminRoutesPostsNewRoute = AdminRoutesPostsNewRouteImport.update({
+  id: '/posts/new',
+  path: '/posts/new',
+  getParentRoute: () => AdminRoutesRouteRoute,
+} as any)
 const AdminRoutesPostsPostIdRoute = AdminRoutesPostsPostIdRouteImport.update({
   id: '/posts/$postId',
   path: '/posts/$postId',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/admin/books/$bookId': typeof AdminRoutesBooksBookIdRoute
   '/admin/chapters/$chapterId': typeof AdminRoutesChaptersChapterIdRoute
   '/admin/posts/$postId': typeof AdminRoutesPostsPostIdRoute
+  '/admin/posts/new': typeof AdminRoutesPostsNewRoute
   '/admin/subjects/$subjectId': typeof AdminRoutesSubjectsSubjectIdRoute
   '/': typeof RootRoutesMainIndexRoute
   '/admin/books': typeof AdminRoutesBooksIndexRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/admin/books/$bookId': typeof AdminRoutesBooksBookIdRoute
   '/admin/chapters/$chapterId': typeof AdminRoutesChaptersChapterIdRoute
   '/admin/posts/$postId': typeof AdminRoutesPostsPostIdRoute
+  '/admin/posts/new': typeof AdminRoutesPostsNewRoute
   '/admin/subjects/$subjectId': typeof AdminRoutesSubjectsSubjectIdRoute
   '/': typeof RootRoutesMainIndexRoute
   '/admin/books': typeof AdminRoutesBooksIndexRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/admin/_routes/books/$bookId': typeof AdminRoutesBooksBookIdRoute
   '/admin/_routes/chapters/$chapterId': typeof AdminRoutesChaptersChapterIdRoute
   '/admin/_routes/posts/$postId': typeof AdminRoutesPostsPostIdRoute
+  '/admin/_routes/posts/new': typeof AdminRoutesPostsNewRoute
   '/admin/_routes/subjects/$subjectId': typeof AdminRoutesSubjectsSubjectIdRoute
   '/_root/_routes/_main/': typeof RootRoutesMainIndexRoute
   '/admin/_routes/books/': typeof AdminRoutesBooksIndexRoute
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
     | '/admin/books/$bookId'
     | '/admin/chapters/$chapterId'
     | '/admin/posts/$postId'
+    | '/admin/posts/new'
     | '/admin/subjects/$subjectId'
     | '/'
     | '/admin/books'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/books/$bookId'
     | '/admin/chapters/$chapterId'
     | '/admin/posts/$postId'
+    | '/admin/posts/new'
     | '/admin/subjects/$subjectId'
     | '/'
     | '/admin/books'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/admin/_routes/books/$bookId'
     | '/admin/_routes/chapters/$chapterId'
     | '/admin/_routes/posts/$postId'
+    | '/admin/_routes/posts/new'
     | '/admin/_routes/subjects/$subjectId'
     | '/_root/_routes/_main/'
     | '/admin/_routes/books/'
@@ -494,6 +506,13 @@ declare module '@tanstack/react-router' {
       path: '/subjects/$subjectId'
       fullPath: '/admin/subjects/$subjectId'
       preLoaderRoute: typeof AdminRoutesSubjectsSubjectIdRouteImport
+      parentRoute: typeof AdminRoutesRouteRoute
+    }
+    '/admin/_routes/posts/new': {
+      id: '/admin/_routes/posts/new'
+      path: '/posts/new'
+      fullPath: '/admin/posts/new'
+      preLoaderRoute: typeof AdminRoutesPostsNewRouteImport
       parentRoute: typeof AdminRoutesRouteRoute
     }
     '/admin/_routes/posts/$postId': {
@@ -667,6 +686,7 @@ interface AdminRoutesRouteRouteChildren {
   AdminRoutesBooksBookIdRoute: typeof AdminRoutesBooksBookIdRoute
   AdminRoutesChaptersChapterIdRoute: typeof AdminRoutesChaptersChapterIdRoute
   AdminRoutesPostsPostIdRoute: typeof AdminRoutesPostsPostIdRoute
+  AdminRoutesPostsNewRoute: typeof AdminRoutesPostsNewRoute
   AdminRoutesSubjectsSubjectIdRoute: typeof AdminRoutesSubjectsSubjectIdRoute
   AdminRoutesBooksIndexRoute: typeof AdminRoutesBooksIndexRoute
   AdminRoutesChaptersIndexRoute: typeof AdminRoutesChaptersIndexRoute
@@ -680,6 +700,7 @@ const AdminRoutesRouteRouteChildren: AdminRoutesRouteRouteChildren = {
   AdminRoutesBooksBookIdRoute: AdminRoutesBooksBookIdRoute,
   AdminRoutesChaptersChapterIdRoute: AdminRoutesChaptersChapterIdRoute,
   AdminRoutesPostsPostIdRoute: AdminRoutesPostsPostIdRoute,
+  AdminRoutesPostsNewRoute: AdminRoutesPostsNewRoute,
   AdminRoutesSubjectsSubjectIdRoute: AdminRoutesSubjectsSubjectIdRoute,
   AdminRoutesBooksIndexRoute: AdminRoutesBooksIndexRoute,
   AdminRoutesChaptersIndexRoute: AdminRoutesChaptersIndexRoute,

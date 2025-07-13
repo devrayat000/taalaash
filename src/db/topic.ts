@@ -55,7 +55,6 @@ export const chapter = pgTable(
 
 export const post = pgTable("posts", {
 	id: uuid("id").primaryKey().defaultRandom(),
-	text: text("text").notNull(),
 	page: integer("page"),
 	chapterId: uuid("chapter_id")
 		.notNull()

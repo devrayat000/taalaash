@@ -29,9 +29,7 @@ export const getBooksBySubject = createServerFn({ method: "GET" })
 			.innerJoin(subject, eq(bookAuthor.subjectId, subject.id))
 			.innerJoin(chapter, eq(bookAuthor.id, chapter.bookAuthorId))
 			.innerJoin(post, eq(chapter.id, post.chapterId))
-			.where(
-				and(inArray(subject.name, subjects), ilike(post.text, `%${query}%`)),
-			)
+			.where(inArray(subject.name, subjects))
 			.groupBy(bookAuthor.id, bookAuthor.name);
 
 		return books;
@@ -58,11 +56,7 @@ export const getChaptersByBook = createServerFn({ method: "GET" })
 			.innerJoin(chapter, eq(bookAuthor.id, chapter.bookAuthorId))
 			.innerJoin(post, eq(chapter.id, post.chapterId))
 			.where(
-				and(
-					inArray(subject.name, subjects),
-					inArray(bookAuthor.name, books),
-					ilike(post.text, `%${query}%`),
-				),
+				and(inArray(subject.name, subjects), inArray(bookAuthor.name, books)),
 			)
 			.groupBy(chapter.id, chapter.name);
 

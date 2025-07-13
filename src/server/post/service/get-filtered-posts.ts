@@ -30,7 +30,6 @@ export const getFilteredPosts = createServerFn({ method: "GET" })
 		const baseQuery = db
 			.select({
 				id: post.id,
-				text: post.text,
 				page: post.page,
 				keywords: post.keywords,
 				imageUrl: post.imageUrl,
@@ -95,9 +94,9 @@ export const getFilteredPosts = createServerFn({ method: "GET" })
 			}
 		}
 
-		if (!!params?.query) {
-			conditions.push(ilike(post.text, `%${params?.query}%`));
-		}
+		// if (!!params?.query) {
+		// 	conditions.push(ilike(post.text, `%${params?.query}%`));
+		// }
 
 		let queryBuilder = baseQuery;
 
@@ -113,7 +112,7 @@ export const getFilteredPosts = createServerFn({ method: "GET" })
 		// Pagination and ordering
 		if (params?.orderBy?.length) {
 			const orderColumns = params.orderBy.map((col) => {
-				if (col === "text") return post.text;
+				// if (col === "text") return post.text;
 				if (col === "createdAt") return post.createdAt;
 				if (col === "page") return post.page;
 				return post.createdAt; // default

@@ -15,7 +15,6 @@ export const getManyPostsForIndexing = createServerFn({ method: "GET" })
 		return db
 			.select({
 				id: post.id,
-				text: post.text,
 				chapter: chapter.name,
 				book: bookAuthor.name,
 				edition: bookAuthor.edition,

@@ -21,7 +21,7 @@ import { createServerFn } from "@tanstack/react-start";
 type PostInput = Omit<InferInsertModel<typeof post>, "id">;
 
 const createPostSchema = object({
-	text: string().min(1, "Text is required"),
+	id: string().uuid(),
 	imageUrl: string().url("Invalid URL"),
 	chapterId: string().min(1, "Chapter ID is required"),
 	keywords: array(string()).optional().default([]),

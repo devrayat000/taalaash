@@ -1,9 +1,9 @@
-import * as z from "zod";
+import { z } from "zod";
 import { Suspense, use, useEffect, useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { useForm, useStore } from "@tanstack/react-form";
 import { toast } from "@/components/ui/use-toast";
-import { Trash } from "lucide-react";
+import { FileImageIcon, Trash } from "lucide-react";
 import { useParams, useRouter, useNavigate } from "@tanstack/react-router";
 import { InferSelectModel } from "drizzle-orm";
 import merge from "lodash/merge";
@@ -26,40 +26,37 @@ import { getBooksBySubject } from "@/server/book/action/book";
 import { getChaptersByBooks } from "@/server/chapter/action/chapter";
 import { Textarea } from "@/components/ui/textarea";
 import { upload } from "@vercel/blob/client";
-import DropZoneInput from "@/components/drop-zone";
+import {
+	FileUploader,
+	FileUploaderContent,
+	FileUploaderItem,
+	FileInput,
+} from "@/components/ui/drop-zone";
 import { createFile, env } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Loader } from "@/components/ui/loader";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 
-const bulkSchema = z
-	.object({
-		subjectId: z.string().min(1),
-		bookAuthorId: z.string().min(1),
-		chapterId: z.string().min(1),
-	})
-	.passthrough();
-
-const singleSchema = z.object({
-	text: z.string().min(1),
-	page: z.number().int().positive().optional(),
-	keywords: z
-		.preprocess(
-			(x) =>
-				String(x)
-					.split(",")
-					.map((t) => t.trim()),
-			z.string().array(),
-		)
-		.optional(),
+const postFormSchema = z.object({
+	subjectId: z.string().min(1),
+	bookAuthorId: z.string().min(1),
+	chapterId: z.string().min(1),
+	files: z.file().array(),
+	pages: z.number().int().array(),
+	// page: z.number().int().positive().optional(),
+	// keywords: z
+	//     .preprocess(
+	//         (x) =>
+	//             String(x)
+	//                 .split(",")
+	//                 .map((t) => t.trim()),
+	//         z.string().array(),
+	//     )
+	//     .optional(),
 });
 
-const formSchema = singleSchema.merge(bulkSchema);
-
-type PostFormValues = z.infer<typeof formSchema> & {
-	image: File | null;
-};
+type PostFormValues = z.infer<typeof postFormSchema>;
 
 type Chapter = InferSelectModel<typeof chapter>;
 type Subject = InferSelectModel<typeof subject>;
@@ -108,16 +105,18 @@ export const PostForm: React.FC<PostFormProps> = ({
 
 	const form = useForm({
 		defaultValues: {
-			text: initialData?.text ?? "",
-			page: initialData?.page ?? undefined,
+			// text: initialData?.text ?? "",
+			// page: initialData?.page ?? undefined,
 			subjectId: initialData?.subject.id ?? "",
 			bookAuthorId: initialData?.book.id ?? "",
 			chapterId: initialData?.chapter.id ?? "",
-			image: defaultEmbed,
-			keywords: initialData?.keywords ?? [],
+			// image: defaultEmbed,
+			files: [],
+			pages: [],
+			// keywords: initialData?.keywords ?? [],
 		},
 		validators: {
-			onSubmitAsync: params.postId === "bulk" ? bulkSchema : formSchema,
+			onSubmitAsync: postFormSchema,
 		},
 		onSubmit: async ({ value: { subjectId, bookAuthorId, ...data } }) => {
 			console.log("submitting");
@@ -202,6 +201,13 @@ export const PostForm: React.FC<PostFormProps> = ({
 		queryKey: ["books", subjectId],
 		queryFn: () => getBooksBySubject({ data: { id: subjectId } }),
 		enabled: !!subjectId,
+	});
+
+	const bookId = useStore(form.store, (state) => state.values.bookAuthorId);
+	const { data: chaptersByBook, isLoading: isChaptersLoading } = useQuery({
+		queryKey: ["chapters", bookId],
+		queryFn: () => getChaptersByBooks({ data: { id: bookId } }),
+		enabled: !!bookId,
 	});
 
 	const onUploadBulk = async (formData: FormData) => {
@@ -385,82 +391,80 @@ export const PostForm: React.FC<PostFormProps> = ({
 							</div>
 						)}
 					</form.Field>
-					{/* <FormField
-						control={form.control}
-						name="chapterId"
-						disabled={!chaptersByBook || loading}
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Chapter</FormLabel>
-								<FormControl>
-									<Select
-										onValueChange={field.onChange}
-										value={field.value}
-										disabled={field.disabled}
-										required
+					<form.Field name="chapterId">
+						{(field) => (
+							<div>
+								<Label>Chapter</Label>
+								<Select
+									onValueChange={field.handleChange}
+									value={field.state.value}
+									disabled={!chaptersByBook || loading}
+									required
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Select a chapter" />
+									</SelectTrigger>
+									<SelectContent>
+										{chaptersByBook?.map((chapter) => (
+											<SelectItem key={chapter.id} value={chapter.id}>
+												{chapter.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								{/* <FormMessage /> */}
+							</div>
+						)}
+					</form.Field>
+					<form.Field name="files">
+						{(field) => (
+							<div>
+								<Label>Image</Label>
+								<Suspense>
+									{/* <DropZoneInput
+										ref={embedRef}
+										onFileDrop={(files) =>
+											field.handleChange(
+												params.postId === "bulk" ? files : files[0],
+											)
+										}
+										onBlur={field.handleBlur}
+										defaultFile={field.state.value || undefined}
+										multiple={params.postId === "bulk"}
+										maxFiles={params.postId === "bulk" ? 50 : undefined}
+										disabled={loading}
+									/> */}
+									<FileUploader
+										value={field.state.value || []}
+										onValueChange={field.handleChange}
+										dropzoneOptions={{
+											maxFiles: 100,
+											maxSize: 1024 * 1024 * 4,
+											multiple: true,
+										}}
+										className="relative bg-background rounded-lg p-2"
 									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select a chapter" />
-										</SelectTrigger>
-										<SelectContent>
-											{chaptersByBook?.map((chapter) => (
-												<SelectItem key={chapter.id} value={chapter.id}>
-													{chapter.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
+										<FileInput className="outline-dashed outline-1 outline-white">
+											<div className="flex items-center justify-center flex-col pt-3 pb-4 w-full ">
+												<FileImageIcon />
+											</div>
+										</FileInput>
+										<FileUploaderContent>
+											{field.state.value &&
+												field.state.value.length > 0 &&
+												field.state.value.map((file, i) => (
+													<FileUploaderItem key={i} index={i}>
+														<Paperclip className="h-4 w-4 stroke-current" />
+														<span>{file.name}</span>
+													</FileUploaderItem>
+												))}
+										</FileUploaderContent>
+									</FileUploader>
+								</Suspense>
+							</div>
 						)}
-					/>
-					{params.postId !== "bulk" && (
-						<FormField
-							control={form.control}
-							name="text"
-							disabled={loading}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Name</FormLabel>
-									<FormControl>
-										<Textarea
-											rows={5}
-											placeholder="Question or Text"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					)}
-					<FormField
-						control={form.control}
-						name="image"
-						disabled={loading}
-						render={({ field: { value, onChange, ...field } }) => (
-							<FormItem>
-								<FormLabel>Image</FormLabel>
-								<FormControl>
-									<Suspense>
-										<DropZoneInput
-											{...field}
-											ref={embedRef}
-											onFileDrop={(files) =>
-												onChange(params.postId === "bulk" ? files : files[0])
-											}
-											defaultFile={value || undefined}
-											multiple={params.postId === "bulk"}
-											maxFiles={params.postId === "bulk" ? 50 : undefined}
-										/>
-									</Suspense>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					{params.postId !== "bulk" && (
+					</form.Field>
+					{/* {params.postId !== "bulk" && (
 						<div className="md:grid md:grid-cols-2 gap-x-8 gap-y-4">
 							<FormField
 								control={form.control}
