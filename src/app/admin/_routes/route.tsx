@@ -20,7 +20,7 @@ export const Route = createFileRoute("/admin/_routes")({
 
 		if (context.user?.role !== "admin") {
 			throw redirect({
-				to: "/admin/signin",
+				to: "/signin",
 				search: { error: "Unauthorized" },
 			});
 		}

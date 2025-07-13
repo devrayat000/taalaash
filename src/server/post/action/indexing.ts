@@ -12,7 +12,7 @@ export const recognizeText = createServerFn({ method: "POST" })
 		try {
 			const fetchUrl = new URL(
 				"/v1/taalaash/bulk-upload",
-				"http://127.0.0.1:8001",
+				process.env.OCR_URL || "http://127.0.0.1:8001",
 			);
 			const response = await fetch(fetchUrl, {
 				method: "POST",
