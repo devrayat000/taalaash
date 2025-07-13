@@ -2,6 +2,7 @@ import { pineconeIndex } from "@/lib/pinecone";
 import { authed } from "@/server/middleware";
 import { getFilteredPosts } from "@/server/post/service/get-filtered-posts";
 import { createServerFn } from "@tanstack/react-start";
+import { notFound } from "@tanstack/react-router";
 import {
 	object,
 	string,
@@ -36,15 +37,31 @@ export const searchRecords = createServerFn({ method: "GET" })
 				},
 			},
 			fields: ["id"],
-			// rerank: {
-			// 	model: "bge-reranker-v2-m3",
-			// 	rankFields: ["content"],
-			// 	topN: 12,
-			// },
+			rerank: {
+				model: "bge-reranker-v2-m3",
+				rankFields: ["text"],
+				topN: data.limit,
+			},
 		});
+		if (!searchWithText.result.hits.length) {
+			throw notFound({
+				data: {
+					message: "No posts found for the given query.",
+				},
+			});
+		}
+
 		const postsByIds = await getFilteredPosts({
 			data: { posts: searchWithText.result.hits.map((hit) => hit._id) },
 		});
+
+		if (!postsByIds.length) {
+			throw notFound({
+				data: {
+					message: "No posts found for the given query.",
+				},
+			});
+		}
 
 		return postsByIds;
 	});
