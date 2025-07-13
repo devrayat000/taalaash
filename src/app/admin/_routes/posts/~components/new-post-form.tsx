@@ -275,11 +275,17 @@ export const NewPostForm = () => {
 								<Suspense>
 									<FileUploader
 										value={field.state.value || []}
-										onValueChange={field.handleChange}
+										onValueChange={(files) => {
+											!!files && !!files.length && field.handleChange(files);
+										}}
 										dropzoneOptions={{
 											maxFiles: 100,
 											maxSize: 1024 * 1024 * 4,
 											multiple: true,
+											accept: {
+												"image/jpeg": [],
+												"image/png": [],
+											},
 										}}
 										className="relative bg-background rounded-lg p-2"
 									>
@@ -300,6 +306,9 @@ export const NewPostForm = () => {
 										</FileUploaderContent>
 									</FileUploader>
 								</Suspense>
+								<p className="text-sm text-muted-foreground">
+									Supported formats: JPEG, PNG. Max size: 4MB per file.
+								</p>
 							</div>
 						)}
 					</form.Field>
