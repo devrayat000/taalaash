@@ -12,6 +12,7 @@ import LogoutButton from "./logout";
 import { useSession } from "@/lib/auth-client";
 import { Link } from "@tanstack/react-router";
 import { getAvatarLetters } from "@/lib/utils";
+import { ShieldIcon } from "lucide-react";
 
 export default function UserAvatar() {
 	const { data } = useSession();
@@ -20,6 +21,8 @@ export default function UserAvatar() {
 		// redirect("/signin");
 		return null;
 	}
+
+	const isAdmin = data?.user?.role === "admin";
 
 	return (
 		<DropdownMenu>
@@ -45,6 +48,20 @@ export default function UserAvatar() {
 				<DropdownMenuItem asChild className="cursor-pointer">
 					<Link to="/bookmarks">Bookmarks</Link>
 				</DropdownMenuItem>
+				{isAdmin && (
+					<>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem
+							asChild
+							className="cursor-pointer text-orange-600"
+						>
+							<Link to="/admin" className="flex items-center space-x-2">
+								<ShieldIcon className="h-4 w-4" />
+								<span>Admin Dashboard</span>
+							</Link>
+						</DropdownMenuItem>
+					</>
+				)}
 				<LogoutButton />
 			</DropdownMenuContent>
 		</DropdownMenu>

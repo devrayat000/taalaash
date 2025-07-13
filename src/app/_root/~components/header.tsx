@@ -13,13 +13,14 @@ import {
 import logoSq from "@/assets/logo.png?url";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import { useSession } from "@/lib/auth-client";
 import {
 	NavigationMenu,
 	NavigationMenuItem,
 	NavigationMenuLink,
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
 import UserAvatar from "./user-avatar";
 
 const navigationItems = [
@@ -32,9 +33,16 @@ const navigationItems = [
 
 export default function Header() {
 	const [isOpen, setIsOpen] = useState(false);
+	const { data } = useSession();
+	const isAdmin = data?.user?.role === "admin";
 
 	return (
-		<header className="sticky px-10 top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+		<header
+			className={cn(
+				"sticky px-10 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+				isAdmin ? "top-8" : "top-0",
+			)}
+		>
 			<div className="container flex h-14 max-w-screen-2xl items-center justify-between">
 				{/* Logo and Brand */}
 				<div className="mr-4 hidden md:flex">
