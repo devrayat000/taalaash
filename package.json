@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"start": "node -r dotenv/config .output/server/index.mjs",
+		"start": "node --env-file=.env .output/server/index.mjs",
 		"test:demo": "node --loader ts-node/esm --experimental-specifier-resolution node demo.ts",
 		"save:index": "node --loader ts-node/esm --experimental-fetch --experimental-specifier-resolution node save-index.ts",
 		"db:generate": "drizzle-kit generate",

@@ -30,7 +30,7 @@ jobs:
           username: ${{ secrets.DO_SSH_USER }}
           port: ${{ secrets.DO_SSH_PORT }}
           key: ${{ secrets.DO_SSH_KEY }}
-          source: ".output,www.mjs"
+          source: ".output"
           target: "${{ secrets.DO_DEPLOY_PATH }}"
 
       - name: Write .env.production to VM
