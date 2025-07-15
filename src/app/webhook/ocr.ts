@@ -24,7 +24,7 @@ const webhookPayloadSchema = z.object({
 	timestamp: z.string(),
 });
 
-export const ServerRoute = createServerFileRoute("/api/webhook/ocr").methods({
+export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 	POST: async ({ request }) => {
 		try {
 			console.log("OCR webhook received");
