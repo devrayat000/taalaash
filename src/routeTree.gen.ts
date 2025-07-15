@@ -40,6 +40,7 @@ import { Route as RootRoutesMainContentGalleryRouteImport } from './app/_root/_r
 import { Route as RootRoutesMainBookmarksRouteImport } from './app/_root/_routes/_main/bookmarks'
 import { Route as RootRoutesMainAboutRouteImport } from './app/_root/_routes/_main/about'
 import { Route as RootRoutesSearchSearchIndexRouteImport } from './app/_root/_routes/_search/search/index'
+import { ServerRoute as WebhookOcrServerRouteImport } from './app/webhook/ocr'
 import { ServerRoute as ApiAuthSplatServerRouteImport } from './app/api/auth/$'
 
 const rootServerRouteImport = createServerRootRoute()
@@ -194,6 +195,11 @@ const RootRoutesSearchSearchIndexRoute =
     path: '/search/',
     getParentRoute: () => RootRoutesSearchRouteRoute,
   } as any)
+const WebhookOcrServerRoute = WebhookOcrServerRouteImport.update({
+  id: '/webhook/ocr',
+  path: '/webhook/ocr',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
 const ApiAuthSplatServerRoute = ApiAuthSplatServerRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -373,24 +379,28 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
 }
 export interface FileServerRoutesByFullPath {
+  '/webhook/ocr': typeof WebhookOcrServerRoute
   '/api/auth/$': typeof ApiAuthSplatServerRoute
 }
 export interface FileServerRoutesByTo {
+  '/webhook/ocr': typeof WebhookOcrServerRoute
   '/api/auth/$': typeof ApiAuthSplatServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
+  '/webhook/ocr': typeof WebhookOcrServerRoute
   '/api/auth/$': typeof ApiAuthSplatServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/auth/$'
+  fullPaths: '/webhook/ocr' | '/api/auth/$'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/auth/$'
-  id: '__root__' | '/api/auth/$'
+  to: '/webhook/ocr' | '/api/auth/$'
+  id: '__root__' | '/webhook/ocr' | '/api/auth/$'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
+  WebhookOcrServerRoute: typeof WebhookOcrServerRoute
   ApiAuthSplatServerRoute: typeof ApiAuthSplatServerRoute
 }
 
@@ -603,6 +613,13 @@ declare module '@tanstack/react-router' {
 }
 declare module '@tanstack/react-start/server' {
   interface ServerFileRoutesByPath {
+    '/webhook/ocr': {
+      id: '/webhook/ocr'
+      path: '/webhook/ocr'
+      fullPath: '/webhook/ocr'
+      preLoaderRoute: typeof WebhookOcrServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -734,6 +751,7 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
+  WebhookOcrServerRoute: WebhookOcrServerRoute,
   ApiAuthSplatServerRoute: ApiAuthSplatServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport
