@@ -38,7 +38,7 @@ export const searchRecords = createServerFn({ method: "GET" })
 			},
 			fields: ["id"],
 			rerank: {
-				model: "bge-reranker-v2-m3",
+				model: "pinecone-rerank-v0",
 				rankFields: ["text"],
 				topN: data.limit,
 			},
