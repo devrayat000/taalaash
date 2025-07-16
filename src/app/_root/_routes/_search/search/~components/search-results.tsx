@@ -34,9 +34,10 @@ export default function SearchResults() {
 	//   })
 	// );
 
-	const {
-		posts: { data: posts, count },
-	} = useLoaderData({ from: "/_root/_routes/_search/search/" });
+	const loaderData = useLoaderData({ from: "/_root/_routes/_search/search/" });
+	// Defensive: handle not found or missing data
+	const posts = loaderData?.posts?.data ?? [];
+	const count = loaderData?.posts?.count ?? 0;
 
 	return (
 		<div className="@container/grid w-full">

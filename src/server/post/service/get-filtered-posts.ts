@@ -133,7 +133,6 @@ export const getFilteredPosts = createServerFn({ method: "GET" })
 // Export the return type for other files to use
 export type PostWithAllRelations = {
 	id: string;
-	text: string;
 	page: number | null;
 	keywords: string[] | null;
 	imageUrl: string;
