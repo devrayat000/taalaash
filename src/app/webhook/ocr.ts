@@ -92,21 +92,21 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				);
 
 				try {
-					// Extract text for indexing (only non-empty text)
-					const textsToIndex = chapterResults
-						.map((r) => r.text.trim())
-						.filter((text) => text.length > 0);
+					// Prepare documents for indexing: only non-empty text
+					const docsToIndex = chapterResults
+						.map((r) => ({ id: r.id, text: r.text.trim() }))
+						.filter((doc) => doc.text.length > 0);
 
 					let indexedDocs = [];
 
 					// Index documents if there's text to index
-					if (textsToIndex.length > 0) {
+					if (docsToIndex.length > 0) {
 						console.log(
-							`Indexing ${textsToIndex.length} documents for chapter ${chapterId}`,
+							`Indexing ${docsToIndex.length} documents for chapter ${chapterId}`,
 						);
 						indexedDocs = await indexDocuments({
 							data: {
-								documents: textsToIndex,
+								documents: docsToIndex,
 								chapterId: chapterId,
 							},
 						});

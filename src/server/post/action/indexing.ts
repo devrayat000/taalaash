@@ -31,7 +31,12 @@ export const recognizeText = createServerFn({ method: "POST" })
 export const indexDocuments = createServerFn({ method: "POST" })
 	.validator(
 		object({
-			documents: array(string()),
+			documents: array(
+				object({
+					id: string(),
+					text: string(),
+				}),
+			),
 			chapterId: string(),
 		}),
 	)
@@ -47,9 +52,9 @@ export const indexDocuments = createServerFn({ method: "POST" })
 			.innerJoin(bookAuthor, eq(chapter.bookAuthorId, bookAuthor.id))
 			.innerJoin(subject, eq(bookAuthor.subjectId, subject.id))
 			.where(eq(chapter.id, chapterId));
-		const docs = documents.map((text) => ({
-			id: uuid(),
-			text: text,
+		const docs = documents.map((doc) => ({
+			id: doc.id,
+			text: doc.text,
 			...docInfo[0],
 		}));
 		await pineconeIndex.upsertRecords(docs);
