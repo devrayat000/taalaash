@@ -37,11 +37,11 @@ export const searchRecords = createServerFn({ method: "GET" })
 				},
 			},
 			fields: ["id"],
-			rerank: {
-				model: "pinecone-rerank-v0",
-				rankFields: ["text"],
-				topN: data.limit,
-			},
+			// rerank: {
+			// 	model: "pinecone-rerank-v0",
+			// 	rankFields: ["text"],
+			// 	topN: data.limit,
+			// },
 		});
 		if (!searchWithText.result.hits.length) {
 			throw notFound({
