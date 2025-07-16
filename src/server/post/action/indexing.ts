@@ -101,7 +101,7 @@ export const bulkUploadWithOCR = createServerFn({ method: "POST" })
 			}));
 
 			const ocrPayload = {
-				chatper_id: chapterId,
+				chapter_id: chapterId,
 				images: images,
 			};
 
