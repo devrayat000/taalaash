@@ -1,19 +1,14 @@
 import { z } from "zod";
-import { Suspense, use, useEffect, useRef, useState } from "react";
-import { useFormState } from "react-dom";
+import { Suspense, useState } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
-import { toast } from "@/components/ui/use-toast";
-import { FileImageIcon, Paperclip, Trash } from "lucide-react";
-import { useParams, useRouter, useNavigate } from "@tanstack/react-router";
-import { InferSelectModel } from "drizzle-orm";
-import zip from "lodash/zip";
+import { FileImageIcon, Paperclip } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Toaster as Sonner, ToasterProps, toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
-import { AlertModal } from "@/components/modals/alert-modal";
-import { bookAuthor, chapter, post, subject } from "@/db/schema";
 import {
 	Select,
 	SelectContent,
@@ -21,24 +16,19 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { createPost, deletePost, updatePost } from "@/server/post/action";
 import { getBooksBySubject } from "@/server/book/action/book";
 import { getChaptersByBooks } from "@/server/chapter/action/chapter";
-import { Textarea } from "@/components/ui/textarea";
 import {
 	FileUploader,
 	FileUploaderContent,
 	FileUploaderItem,
 	FileInput,
 } from "@/components/ui/drop-zone";
-import { createFile, env } from "@/lib/utils";
-import { Progress } from "@/components/ui/progress";
 import { Loader } from "@/components/ui/loader";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { getAllSubjects } from "@/server/subject/service";
-import { indexDocuments, recognizeText } from "@/server/post/action/indexing";
-import { uploadPostImages } from "@/server/post/action/upload-post-image";
+import { bulkUploadWithOCR } from "@/server/post/action/indexing";
 
 const postFormSchema = z.object({
 	subjectId: z.string().min(1),
@@ -69,12 +59,9 @@ function parsePageRange(input: string): number[] {
 }
 
 export const NewPostForm = () => {
-	const router = useRouter();
 	const navigate = useNavigate();
 
-	const [open, setOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const embedRef = useRef<HTMLInputElement>(null);
 
 	const form = useForm({
 		defaultValues: {
@@ -89,66 +76,101 @@ export const NewPostForm = () => {
 		},
 		onSubmit: async ({ value: { subjectId, bookAuthorId, ...data } }) => {
 			try {
-				console.log("submitting");
-				const formData = new FormData();
-				formData.append("subjectId", subjectId);
-				formData.append("bookAuthorId", bookAuthorId);
-				formData.append("chapterId", data.chapterId);
-				if (data.files && Array.isArray(data.files)) {
-					data.files.forEach((file: File) => {
-						formData.append("files", file);
-					});
-				}
+				console.log("Starting bulk upload with OCR workflow");
+				setLoading(true);
 
-				const { dismiss } = toast({
-					title: "Uploading files...",
-					variant: "default",
-					description: <Loader />,
-					duration: Infinity,
-				});
-
-				const [imageTexts, images] = await Promise.all([
-					recognizeText({ data: formData }),
-					uploadPostImages({ data: formData }),
-				]);
-				console.log("Image texts:", imageTexts);
-				console.log("Uploaded images:", images);
-
-				const chapterId = formData.get("chapterId")!.toString();
-
-				const docs = await indexDocuments({
-					data: { chapterId, documents: imageTexts.map((obj) => obj.text) },
-				});
-
-				console.log("Indexed documents:", docs);
-
+				// Parse page numbers for validation
 				const pages =
 					typeof data.pages === "string"
 						? parsePageRange(data.pages)
 						: data.pages;
 
-				const newPosts = zip(imageTexts, images!, docs, pages).map(
-					([imageText, image, doc, page]) => ({
-						//   @ts-ignore
-						id: doc.id,
-						imageUrl: image?.fileUrl,
-						chapterId: formData.get("chapterId")!.toString(),
-						page,
-					}),
+				// Validate files and pages
+				if (!data.files || data.files.length === 0) {
+					toast.error("Please select at least one file to upload");
+					throw new Error("Please select at least one file to upload");
+				}
+
+				if (pages.length === 0) {
+					toast.error("Please specify page numbers");
+					throw new Error("Please specify page numbers");
+				}
+
+				if (pages.length !== data.files.length) {
+					toast.warning(
+						`Number of page numbers (${pages.length}) must match number of files (${data.files.length})`,
+					);
+					throw new Error(
+						`Number of page numbers (${pages.length}) must match number of files (${data.files.length})`,
+					);
+				}
+
+				const formData = new FormData();
+				formData.append("chapterId", data.chapterId);
+
+				// Add files to FormData
+				data.files.forEach((file: File) => {
+					formData.append("files", file);
+				});
+
+				// Add page metadata to FormData
+				formData.append("pages", JSON.stringify(pages));
+
+				const loadingToastId = toast.loading(
+					<div>
+						<Loader />
+						<p className="mt-2 text-sm">
+							Uploading {data.files.length} images → OCR processing → Indexing →
+							Saving posts
+						</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							Pages: {pages.join(", ")}
+						</p>
+					</div>,
+					{
+						duration: Infinity,
+					},
 				);
-				console.log("New posts data:", newPosts);
 
-				await createPost({ data: newPosts });
+				// Call the new bulk upload with OCR workflow
+				const result = await bulkUploadWithOCR({ data: formData });
 
-				// await createPost({ data });
-				dismiss();
-				// router.replace(`/admin/posts`);
+				console.log("Bulk upload initiated:", result);
+
+				toast.dismiss(loadingToastId);
+
+				// Show success message with batch info
+				toast.success(
+					<div>
+						<p>Batch ID: {result.batch_id}</p>
+						<p>Processing {result.total} files with page metadata...</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							Pages: {pages.join(", ")}
+						</p>
+						<p className="text-sm text-muted-foreground mt-1">
+							OCR processing is running in the background. Results will be saved
+							automatically when complete.
+						</p>
+					</div>,
+					{
+						duration: 10000,
+					},
+				);
+
+				// Navigate back to posts list
 				navigate({
-					to: "/admin/posts",
 					reloadDocument: true,
 				});
 			} catch (error) {
-				console.log("Error uploading post:", error);
+				console.error("Error in bulk upload workflow:", error);
+				toast.error(
+					error instanceof Error ? error.message : "Unknown error occurred",
+					{
+						duration: 8000,
+					},
+				);
+			} finally {
+				setLoading(false);
 			}
 		},
 	});
@@ -167,7 +189,7 @@ export const NewPostForm = () => {
 	});
 
 	const bookId = useStore(form.store, (state) => state.values.bookAuthorId);
-	const { data: chaptersByBook, isLoading: isChaptersLoading } = useQuery({
+	const { data: chaptersByBook } = useQuery({
 		queryKey: ["chapters", bookId],
 		queryFn: () => getChaptersByBooks({ data: { id: bookId } }),
 		enabled: !!bookId,
@@ -298,7 +320,10 @@ export const NewPostForm = () => {
 											{field.state.value &&
 												field.state.value.length > 0 &&
 												field.state.value.map((file, i) => (
-													<FileUploaderItem key={i} index={i}>
+													<FileUploaderItem
+														key={`${file.name}-${file.size}-${i}`}
+														index={i}
+													>
 														<Paperclip className="h-4 w-4 stroke-current" />
 														<span>{file.name}</span>
 													</FileUploaderItem>
@@ -324,9 +349,34 @@ export const NewPostForm = () => {
 									onBlur={field.handleBlur}
 									disabled={loading}
 								/>
-								<p className="text-sm text-muted-foreground">
-									Enter page numbers or ranges (e.g., 1, 2, 3-5)
-								</p>
+								<div className="text-sm text-muted-foreground space-y-1">
+									<p>Enter page numbers or ranges (e.g., 1, 2, 3-5)</p>
+									<p className="text-xs">
+										Number of pages must match the number of uploaded files
+									</p>
+									{field.state.value &&
+										(() => {
+											const pages = parsePageRange(field.state.value);
+											const files = form.store.state.values.files;
+											const fileCount = files ? files.length : 0;
+											return (
+												<p
+													className={`text-xs ${
+														pages.length === fileCount
+															? "text-green-600"
+															: "text-amber-600"
+													}`}
+												>
+													{pages.length > 0 && (
+														<>
+															Pages: {pages.join(", ")} ({pages.length} total)
+														</>
+													)}
+													{fileCount > 0 && <> • Files: {fileCount}</>}
+												</p>
+											);
+										})()}
+								</div>
 							</div>
 						)}
 					</form.Field>

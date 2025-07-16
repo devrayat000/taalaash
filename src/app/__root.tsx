@@ -23,6 +23,7 @@ import { queryClient } from "@/lib/query-client";
 import { Context } from "@/router";
 import { authClient } from "@/lib/auth-client";
 import { getCurrentUser } from "@/server/middleware";
+import { Toaster } from "@/components/ui/sonner";
 
 // const inter = Inter({ subsets: ["latin"], variable: "--inter" });
 // const tiroBangla = Tiro_Bangla({
@@ -131,6 +132,7 @@ function RootLayout() {
 						</Suspense>
 					</HydrationBoundary>
 				</QueryClientProvider>
+				<Toaster />
 				<Scripts />
 			</body>
 		</html>

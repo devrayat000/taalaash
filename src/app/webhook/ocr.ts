@@ -14,6 +14,7 @@ const ocrResultSchema = z.object({
 		chapterId: z.string(),
 		page: z.number().optional(),
 		keywords: z.array(z.string()).optional(),
+		custom_data: z.record(z.string(), z.any()).optional(),
 	}),
 	error: z.string().optional(),
 });
@@ -113,15 +114,21 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 					}
 
 					// Create posts in database
-					const postsToCreate = chapterResults.map((result, index) => ({
-						id: result.id,
-						imageUrl: result.file_url,
-						chapterId: chapterId,
-						// Use index + 1 as page number if not specified in metadata
-						page: result.metadata.page || index + 1,
-						// Add any other fields from metadata
-						keywords: result.metadata.keywords || [],
-					}));
+					// When creating posts, include all metadata fields
+					const postsToCreate = chapterResults.map((result, index) => {
+						const pageNumber = result.metadata.page || index + 1;
+						console.log(
+							`Mapping result ${result.id} to page ${pageNumber} for file ${result.file_url}`,
+						);
+						return {
+							id: result.id,
+							imageUrl: result.file_url,
+							chapterId: chapterId,
+							page: pageNumber,
+							keywords: result.metadata.keywords || [],
+							custom_data: result.metadata.custom_data || {},
+						};
+					});
 
 					console.log(
 						`Creating ${postsToCreate.length} posts for chapter ${chapterId}`,
