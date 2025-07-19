@@ -1,0 +1,72 @@
+services:
+  taalaash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: taalaash/web:latest
+    command: ["bun", "run", ".output/server/index.mjs"]
+    expose:
+      - "${PORT:-3000}"
+    environment:
+      - NODE_ENV=production
+      - NITRO_PRESET=bun
+      - PORT=3000
+    # volumes:
+    #   - .:/app:cached
+    env_file:
+      - .env.production.local
+    restart: unless-stopped
+    deploy:
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 60s
+      mode: replicated
+    # replicas: 2
+    networks:
+      - global-net
+    labels:
+      # Default domain: taalaash.localhost → /
+      - "traefik.enable=true"
+      - "traefik.http.routers.taalaash.rule=Host(`taalaash.localhost`)"
+      - "traefik.http.routers.taalaash.entrypoints=web"
+      - "traefik.http.routers.taalaash.service=taalaash-service"
+      - "traefik.http.routers.taalaash.middlewares=taalaash-ratelimit"
+      - "traefik.http.services.taalaash-service.loadbalancer.server.port=${PORT:-3000}"
+      - "traefik.http.middlewares.taalaash-ratelimit.ratelimit.average=1"
+      - "traefik.http.middlewares.taalaash-ratelimit.ratelimit.burst=60"
+      - "traefik.http.middlewares.taalaash-ratelimit.ratelimit.period=1s"
+      # Admin subdomain: admin.taalaash.localhost → /admin/*
+      - "traefik.http.routers.taalaash-admin.rule=Host(`admin.taalaash.localhost`)"
+      - "traefik.http.routers.taalaash-admin.entrypoints=web"
+      - "traefik.http.routers.taalaash-admin.service=taalaash-service"
+      - "traefik.http.routers.taalaash-admin.middlewares=admin-prefix"
+      - "traefik.http.middlewares.admin-prefix.addprefix.prefix=/admin"
+
+  traefik:
+    image: traefik:v3
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=global-net"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    # - ${PWD}/traefik.yml:/etc/traefik/traefik.yml
+    networks:
+      - global-net
+
+networks:
+  global-net:
+    external: true

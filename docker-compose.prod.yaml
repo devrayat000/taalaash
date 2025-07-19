@@ -1,0 +1,27 @@
+services:
+  taalaash_prod:
+    image: oven/bun:latest
+    working_dir: /app
+    volumes:
+      - ./.output:/app/.output:cached
+    command: ["bun", "run", ".output/server/index.mjs"]
+    expose:
+      - "${PORT:-3000}"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    # volumes:
+    #   - .:/app:cached
+    env_file:
+      - .env.production.local
+    restart: unless-stopped
+    deploy:
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 60s
+      mode: replicated
