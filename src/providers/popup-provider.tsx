@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PostTable } from "@/server/post/service";
-
+import { useState, useEffect, useRef } from "react";
 import { create } from "zustand";
 
 type PostInfo = {
@@ -15,43 +15,286 @@ type PostInfo = {
 	};
 };
 
+type HighlightBox = {
+	left: number;
+	top: number;
+	width: number;
+	height: number;
+	word: string;
+};
+
 type PopupState = {
 	isOpen: boolean;
-	open: (data: PostInfo) => void;
+	open: (data: PostInfo, searchText?: string) => void;
 	close: () => void;
 	onChange: (open: boolean) => void;
 	popupData: PostInfo | null;
+	searchText: string | null;
+	highlights: HighlightBox[];
+	setHighlights: (highlights: HighlightBox[]) => void;
 };
 
 export const usePopup = create<PopupState>((set) => ({
 	isOpen: false,
 	popupData: null,
-	open: (data) => set({ isOpen: true, popupData: data }),
-	close: () => set({ isOpen: false, popupData: null }),
-	onChange: (open) => set({ isOpen: open, popupData: null }),
+	searchText: null,
+	highlights: [],
+	open: (data, searchText) =>
+		set({
+			isOpen: true,
+			popupData: data,
+			searchText: searchText || null,
+			highlights: [],
+		}),
+	close: () =>
+		set({ isOpen: false, popupData: null, searchText: null, highlights: [] }),
+	onChange: (open) =>
+		set({ isOpen: open, popupData: null, searchText: null, highlights: [] }),
+	setHighlights: (highlights) => set({ highlights }),
 }));
+
+const HighlightedImage = ({
+	post,
+	searchText,
+}: {
+	post: PostInfo;
+	searchText: string;
+}) => {
+	const [highlights, setHighlights] = useState<HighlightBox[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+	const setPopupHighlights = usePopup((state) => state.setHighlights);
+	const hasRequested = useRef(false);
+
+	useEffect(() => {
+		if (!post.imageUrl || !searchText || hasRequested.current) return;
+		hasRequested.current = true;
+
+		let eventSource: EventSource | null = null;
+
+		const requestHighlight = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+
+				const response = await fetch(
+					`${import.meta.env.VITE_OCR_URL}/v1/taalaash/highlight`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							file_url: post.imageUrl,
+							search_text: searchText,
+							metadata: {
+								book: post.book.name,
+								chapter: post.chapter.name,
+							},
+						}),
+					},
+				);
+
+				if (!response.ok) {
+					throw new Error(`Failed to request highlights: ${response.status}`);
+				}
+
+				const { task_id } = await response.json();
+
+				eventSource = new EventSource(
+					`${import.meta.env.VITE_OCR_URL}/v1/taalaash/highlight?task_id=${task_id}`,
+				);
+
+				let timeoutId: NodeJS.Timeout;
+
+				function handleMessage(event: MessageEvent) {
+					console.log("SSE Message:", event.data);
+					try {
+						const data = JSON.parse(event.data);
+
+						if (data.status === "completed") {
+							if (data.data?.error) {
+								setError(data.data.error);
+							} else {
+								setHighlights(data.data?.highlights || []);
+								setPopupHighlights(data.data?.highlights || []);
+							}
+							setIsLoading(false);
+							eventSource?.close();
+							clearTimeout(timeoutId);
+						} else if (data.status === "pending") {
+							// Reset timeout on each pending message
+							clearTimeout(timeoutId);
+							timeoutId = setTimeout(() => {
+								setError("Highlight processing timed out. Please try again.");
+								setIsLoading(false);
+								eventSource?.close();
+							}, 30000); // 30 second timeout
+						}
+					} catch (parseError) {
+						setError("Failed to parse highlight response");
+						setIsLoading(false);
+						eventSource?.close();
+					}
+				}
+
+				eventSource.addEventListener("message", handleMessage);
+
+				eventSource.onerror = (err) => {
+					console.error("SSE error", err);
+					setError("Connection error. Please try again.");
+					setIsLoading(false);
+					eventSource?.close();
+					clearTimeout(timeoutId);
+				};
+
+				// Set initial timeout
+				timeoutId = setTimeout(() => {
+					setError("Highlight processing timed out. Please try again.");
+					setIsLoading(false);
+					eventSource?.close();
+				}, 30000);
+			} catch (error) {
+				console.error("Failed to request highlights:", error);
+				setError(
+					error instanceof Error
+						? error.message
+						: "Failed to request highlights",
+				);
+				setIsLoading(false);
+			}
+		};
+
+		requestHighlight();
+
+		// Proper cleanup function
+		return () => {
+			if (eventSource) {
+				eventSource.close();
+			}
+		};
+	}, [post.imageUrl, searchText, setPopupHighlights]);
+
+	const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+		const img = e.currentTarget;
+		setImageSize({ width: img.clientWidth, height: img.clientHeight });
+	};
+
+	const imageRef = useRef<HTMLImageElement>(null);
+
+	return (
+		<div className="relative inline-block">
+			<img
+				ref={imageRef}
+				src={post.imageUrl!}
+				alt={post.book.name}
+				className="rounded-inherit object-cover max-w-full max-h-full"
+				onLoad={handleImageLoad}
+			/>
+
+			{/* Loading overlay */}
+			{isLoading && (
+				<div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-inherit backdrop-blur-sm">
+					<div className="bg-white/90 px-4 py-2 rounded-lg shadow-lg">
+						<div className="flex items-center space-x-2">
+							<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+							<span className="text-gray-800 text-sm font-medium">
+								Processing highlights...
+							</span>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Error overlay */}
+			{error && (
+				<div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-inherit backdrop-blur-sm">
+					<div className="bg-red-50 border border-red-200 px-4 py-3 rounded-lg shadow-lg max-w-xs mx-4">
+						<div className="flex items-center space-x-2">
+							<div className="w-5 h-5 text-red-500">⚠️</div>
+							<div>
+								<p className="text-red-800 text-sm font-medium">
+									Highlight Error
+								</p>
+								<p className="text-red-600 text-xs mt-1">{error}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Highlight overlays - Highlighter pen style */}
+			{!isLoading &&
+				!error &&
+				highlights.map((highlight, index) => {
+					// Calculate the scale factor between the original image and displayed image
+					const img = imageRef.current;
+					if (!img) return null;
+
+					const scaleX = img.clientWidth / img.naturalWidth;
+					const scaleY = img.clientHeight / img.naturalHeight;
+
+					return (
+						<div
+							key={index}
+							className="absolute pointer-events-none animate-in fade-in-150"
+							style={{
+								left: highlight.left * scaleX,
+								top: highlight.top * scaleY,
+								width: highlight.width * scaleX,
+								height: highlight.height * scaleY,
+								background:
+									"linear-gradient(90deg, rgba(255, 255, 0, 0.6) 0%, rgba(255, 235, 59, 0.7) 50%, rgba(255, 255, 0, 0.6) 100%)",
+								boxShadow:
+									"0 0 8px rgba(255, 235, 59, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+								borderRadius: "2px",
+								mixBlendMode: "multiply",
+								filter: "blur(0.3px)",
+							}}
+							title={highlight.word}
+						>
+							{/* Inner glow effect */}
+							<div
+								className="absolute inset-0 rounded-sm"
+								style={{
+									background:
+										"linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%)",
+									animation: "shimmer 2s ease-in-out infinite",
+								}}
+							/>
+						</div>
+					);
+				})}
+		</div>
+	);
+};
 
 export const PopupProvider = () => {
 	const popupStore = usePopup();
 	const post = popupStore.popupData;
+	const searchText = popupStore.searchText;
 
 	return (
 		<Dialog
 			open={popupStore.isOpen}
 			onOpenChange={(open) => !open && popupStore.close()}
 			modal
-			// modal
 		>
 			<DialogContent
 				forceMount
-				className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-[3/4]"
+				className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-[3/4] max-w-[90vw] max-h-[90vh]"
 			>
 				{popupStore.isOpen && !!post && (
-					<img
-						src={post.imageUrl!}
-						alt={post.book.name}
-						className="rounded-inherit object-cover"
-					/>
+					<>
+						{searchText ? (
+							<HighlightedImage post={post} searchText={searchText} />
+						) : (
+							<img
+								src={post.imageUrl!}
+								alt={post.book.name}
+								className="rounded-inherit object-cover max-w-full max-h-full"
+							/>
+						)}
+					</>
 				)}
 			</DialogContent>
 		</Dialog>

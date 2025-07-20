@@ -8,6 +8,8 @@ const dbUrl =
 	process.env.DATABASE_URL ??
 	"postgres://postgres:postgres@localhost:5432/bionex";
 
+console.log({ dbUrl });
+
 // for query purposes
 const queryClient = postgres(dbUrl);
 

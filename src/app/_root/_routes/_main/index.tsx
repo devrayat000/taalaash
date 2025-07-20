@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { TrendingUp, MicIcon, CameraIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.png?url";
+import { useCallback, useState } from "react";
 
 const popularSearches = [
 	"what is the power house of a cell?",
@@ -73,6 +74,23 @@ const premiumUsers = [
 ];
 
 function LandingPage() {
+	const navigate = useNavigate();
+	const [inputValue, setInputValue] = useState("");
+
+	const onSubmit = useCallback(
+		(event: React.FormEvent<HTMLFormElement>) => {
+			event.preventDefault();
+			console.log(event.isDefaultPrevented());
+
+			const { action } = event.currentTarget;
+			// useSearchStore.getState().saveHistory(inputValue);
+			console.log("Submitting search with input:", action);
+
+			navigate({ to: "/search", search: { query: inputValue } });
+		},
+		[inputValue, navigate],
+	);
+
 	return (
 		<div className="min-h-screen bg-white">
 			{/* Main Content */}
@@ -83,11 +101,20 @@ function LandingPage() {
 				</div>
 
 				{/* Search Form */}
-				<div className="max-w-sm mx-auto mb-6">
+				<form
+					className="max-w-sm mx-auto mb-6"
+					method="get"
+					action="/search"
+					onSubmit={onSubmit}
+				>
 					<div className="relative">
 						<Input
 							placeholder="Search..."
 							className="w-full h-11 rounded-full border-gray-300 pl-4 pr-16 text-sm"
+							type="search"
+							name="query"
+							value={inputValue}
+							onChange={(e) => setInputValue(e.target.value)}
 						/>
 						<div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
 							<Button variant="ghost" size="sm" className="p-1 h-7 w-7">
@@ -98,7 +125,7 @@ function LandingPage() {
 							</Button>
 						</div>
 					</div>
-				</div>
+				</form>
 
 				{/* Popular Search Section */}
 				<div className="max-w-sm mx-auto mb-6">

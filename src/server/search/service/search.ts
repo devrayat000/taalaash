@@ -43,6 +43,7 @@ export const searchRecords = createServerFn({ method: "GET" })
 			// 	topN: data.limit,
 			// },
 		});
+		console.log("Search results:", searchWithText.result.hits.length);
 		if (!searchWithText.result.hits.length) {
 			throw notFound({
 				data: {
@@ -54,6 +55,7 @@ export const searchRecords = createServerFn({ method: "GET" })
 		const postsByIds = await getFilteredPosts({
 			data: { posts: searchWithText.result.hits.map((hit) => hit._id) },
 		});
+		console.log("Posts by IDs:", postsByIds);
 
 		if (!postsByIds.length) {
 			throw notFound({

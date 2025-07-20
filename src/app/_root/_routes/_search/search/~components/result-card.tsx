@@ -10,7 +10,15 @@ import type { PostWithAllRelations } from "@/server/post/service/get-filtered-po
 
 export default function ResultCard(post: PostWithAllRelations) {
 	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
-	console.log(post);
+	const query = searchParams.query || "";
+
+	const handleFullPageClick = () => {
+		usePopup.getState().open(post);
+	};
+
+	const handleHighlightedClick = () => {
+		usePopup.getState().open(post, query);
+	};
 
 	return (
 		<article className="rounded-lg overflow-hidden shadow-lg">
@@ -45,7 +53,7 @@ export default function ResultCard(post: PostWithAllRelations) {
 						variant="secondary"
 						className="text-xs h-7 py-0.5 leading-none bg-[#364744] hover:bg-[#364744]/90 text-white flex-1"
 						title="Result image"
-						// onClick={() => usePopup.getState().open(post)}
+						onClick={handleFullPageClick}
 					>
 						Full Page
 					</Button>
@@ -54,16 +62,7 @@ export default function ResultCard(post: PostWithAllRelations) {
 						variant="default"
 						className="text-xs h-7 py-0.5 leading-none bg-[#00B894] hover:bg-[#00B894]/90 flex-1"
 						title="Marked image"
-						onClick={() => {
-							// usePopup.getState().open({
-							// 	...post,
-							// 	imageUrl: `${
-							// 		process.env.NEXT_PUBLIC_OCR_URL
-							// 	}/marked-image?q=${searchParams.get("query")}&post_id=${
-							// 		post.objectID
-							// 	}`,
-							// });
-						}}
+						onClick={handleHighlightedClick}
 					>
 						Highlighted
 					</Button>
