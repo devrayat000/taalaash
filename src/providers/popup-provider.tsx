@@ -1,6 +1,10 @@
 "use client";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+	consumeHighlight,
+	requestHighlight,
+} from "@/server/post/action/highlight";
 import { PostTable } from "@/server/post/service";
 import { useState, useEffect, useRef } from "react";
 import { create } from "zustand";
@@ -65,94 +69,143 @@ const HighlightedImage = ({
 	const [error, setError] = useState<string | null>(null);
 	const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 	const setPopupHighlights = usePopup((state) => state.setHighlights);
-	const hasRequested = useRef(false);
+	const hasRequested = useRef(0);
 
 	useEffect(() => {
-		if (!post.imageUrl || !searchText || hasRequested.current) return;
-		hasRequested.current = true;
+		hasRequested.current++;
+		if (!post.imageUrl || !searchText || hasRequested.current > 1) return;
 
-		let eventSource: EventSource | null = null;
+		// let eventSource: EventSource | null = null;
 
-		const requestHighlight = async () => {
+		const controller = new AbortController();
+
+		const requestHighlightHandler = async (signal: AbortSignal) => {
 			try {
 				setIsLoading(true);
 				setError(null);
 
-				const response = await fetch(
-					`${import.meta.env.VITE_OCR_URL}/v1/taalaash/highlight`,
-					{
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							file_url: post.imageUrl,
-							search_text: searchText,
-							metadata: {
-								book: post.book.name,
-								chapter: post.chapter.name,
-							},
-						}),
+				const { taskId } = await requestHighlight({
+					data: {
+						fileUrl: post.imageUrl,
+						searchText: searchText,
+						metadata: {
+							book: post.book.name,
+							chapter: post.chapter.name,
+						},
 					},
-				);
+					signal,
+				});
+				const response = await consumeHighlight({ data: { taskId }, signal });
 
 				if (!response.ok) {
-					throw new Error(`Failed to request highlights: ${response.status}`);
+					throw new Error("Failed to fetch highlights");
 				}
 
-				const { task_id } = await response.json();
+				const reader = response.body?.getReader();
 
-				eventSource = new EventSource(
-					`${import.meta.env.VITE_OCR_URL}/v1/taalaash/highlight?task_id=${task_id}`,
-				);
+				if (!reader) {
+					throw new Error("Failed to read response body");
+				}
 
+				const decoder = new TextDecoder();
+
+				let highlightsData: HighlightBox[] = [];
 				let timeoutId: NodeJS.Timeout;
 
-				function handleMessage(event: MessageEvent) {
-					console.log("SSE Message:", event.data);
-					try {
-						const data = JSON.parse(event.data);
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
 
-						if (data.status === "completed") {
-							if (data.data?.error) {
-								setError(data.data.error);
-							} else {
-								setHighlights(data.data?.highlights || []);
-								setPopupHighlights(data.data?.highlights || []);
-							}
-							setIsLoading(false);
-							eventSource?.close();
-							clearTimeout(timeoutId);
-						} else if (data.status === "pending") {
-							// Reset timeout on each pending message
-							clearTimeout(timeoutId);
-							timeoutId = setTimeout(() => {
-								setError("Highlight processing timed out. Please try again.");
+					const chunk = decoder.decode(value, { stream: true });
+					console.log({ chunk });
+
+					const lines = chunk.split("\n").filter((line) => line.trim());
+
+					for (const line of lines) {
+						try {
+							const data = JSON.parse(line.replace(/data:\s/, "").trim());
+
+							if (data.status === "completed") {
+								if (data.data?.error) {
+									setError(data.data.error);
+								} else {
+									setHighlights(data.data?.highlights || []);
+									setPopupHighlights(data.data?.highlights || []);
+								}
 								setIsLoading(false);
-								eventSource?.close();
-							}, 30000); // 30 second timeout
+								reader.cancel();
+								clearTimeout(timeoutId);
+							} else if (data.status === "pending") {
+								// Reset timeout on each pending message
+								clearTimeout(timeoutId);
+								timeoutId = setTimeout(() => {
+									setError("Highlight processing timed out. Please try again.");
+									setIsLoading(false);
+									reader.cancel();
+								}, 30000); // 30 second timeout
+							}
+						} catch (parseError) {
+							setError("Failed to parse highlight response");
+							setIsLoading(false);
+							reader.cancel();
+							console.error("Failed to parse highlight response:", parseError);
 						}
-					} catch (parseError) {
-						setError("Failed to parse highlight response");
-						setIsLoading(false);
-						eventSource?.close();
 					}
 				}
 
-				eventSource.addEventListener("message", handleMessage);
+				// eventSource = new EventSource(consumeHighlight.url, {
+				// 	withCredentials: true,
+				// });
 
-				eventSource.onerror = (err) => {
-					console.error("SSE error", err);
-					setError("Connection error. Please try again.");
-					setIsLoading(false);
-					eventSource?.close();
-					clearTimeout(timeoutId);
-				};
+				// let timeoutId: NodeJS.Timeout;
 
-				// Set initial timeout
-				timeoutId = setTimeout(() => {
-					setError("Highlight processing timed out. Please try again.");
-					setIsLoading(false);
-					eventSource?.close();
-				}, 30000);
+				// function handleMessage(event: MessageEvent) {
+				// 	console.log("SSE Message:", event.data);
+				// 	try {
+				// 		const data = JSON.parse(event.data);
+
+				// 		if (data.status === "completed") {
+				// 			if (data.data?.error) {
+				// 				setError(data.data.error);
+				// 			} else {
+				// 				setHighlights(data.data?.highlights || []);
+				// 				setPopupHighlights(data.data?.highlights || []);
+				// 			}
+				// 			setIsLoading(false);
+				// 			eventSource?.close();
+				// 			clearTimeout(timeoutId);
+				// 		} else if (data.status === "pending") {
+				// 			// Reset timeout on each pending message
+				// 			clearTimeout(timeoutId);
+				// 			timeoutId = setTimeout(() => {
+				// 				setError("Highlight processing timed out. Please try again.");
+				// 				setIsLoading(false);
+				// 				eventSource?.close();
+				// 			}, 30000); // 30 second timeout
+				// 		}
+				// 	} catch (parseError) {
+				// 		setError("Failed to parse highlight response");
+				// 		setIsLoading(false);
+				// 		eventSource?.close();
+				// 	}
+				// }
+
+				// eventSource.addEventListener("message", handleMessage);
+
+				// eventSource.onerror = (err) => {
+				// 	console.error("SSE error", err);
+				// 	setError("Connection error. Please try again.");
+				// 	setIsLoading(false);
+				// 	eventSource?.close();
+				// 	clearTimeout(timeoutId);
+				// };
+
+				// // Set initial timeout
+				// timeoutId = setTimeout(() => {
+				// 	setError("Highlight processing timed out. Please try again.");
+				// 	setIsLoading(false);
+				// 	eventSource?.close();
+				// }, 30000);
 			} catch (error) {
 				console.error("Failed to request highlights:", error);
 				setError(
@@ -164,13 +217,10 @@ const HighlightedImage = ({
 			}
 		};
 
-		requestHighlight();
-
+		requestHighlightHandler(controller.signal);
 		// Proper cleanup function
 		return () => {
-			if (eventSource) {
-				eventSource.close();
-			}
+			// if (hasRequested.current < 2) controller.abort();
 		};
 	}, [post.imageUrl, searchText, setPopupHighlights]);
 

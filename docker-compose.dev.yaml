@@ -1,0 +1,40 @@
+services:
+  taalaash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: watcher
+    image: taalaash/web:latest
+    environment:
+      - OCR_URL=http://rubizcode-ai-backend:7501
+    ports:
+      - "3000:${PORT:-3000}"
+    develop:
+      watch:
+        - path: ./src
+          target: /app/src
+          action: sync
+          ignore:
+            - node_modules/
+        - path: package.json
+          action: rebuild
+    env_file:
+      - .env
+    restart: unless-stopped
+    deploy:
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 60s
+      mode: replicated
+    # replicas: 2
+    networks:
+      - global-net
+
+networks:
+  global-net:
+    external: true

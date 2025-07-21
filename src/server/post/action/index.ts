@@ -104,7 +104,7 @@ export const deleteManyPosts = createServerFn({ method: "POST" })
 
 // 	const fetchUrl = new URL(
 // 		"/bulk-upload",
-// 		env("NEXT_PUBLIC_OCR_URL", "http://127.0.0.1:8000"),
+// 		env("OCR_URL", "http://127.0.0.1:8000"),
 // 	);
 // 	const extractedPromise = fetch(fetchUrl, {
 // 		method: "POST",

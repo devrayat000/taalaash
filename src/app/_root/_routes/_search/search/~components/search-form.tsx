@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
 async function getOCR(formData: FormData) {
-	const url = new URL("/image-to-text", process.env.NEXT_PUBLIC_OCR_URL);
+	const url = new URL("/image-to-text", process.env.OCR_URL);
 	const response = await fetch(url, {
 		method: "POST",
 		body: formData,
