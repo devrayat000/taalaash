@@ -2,10 +2,10 @@ name: Build & Push Docker Image to GHCR
 
 on:
   push:
-    branches: [ master ] # or your branch
+    branches: [ master ]
   pull_request:
     types: [synchronize, opened, reopened]
-    branches: [ master ] # or your branch
+    branches: [ master ]
 
 jobs:
   build-and-push:
@@ -29,6 +29,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Extract version and commit sha
         id: vars
         run: |
@@ -46,3 +49,21 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}
             ghcr.io/${{ github.repository }}:${{ env.SHORT_SHA }}
+
+  trigger-deploy:
+    runs-on: ubuntu-24.04
+    needs: build-and-push
+
+    steps:
+      - name: Trigger Dokploy Deployment
+        run: |
+          curl -X 'POST' \
+          'http://31.97.206.20:3000/api/trpc/application.deploy' \
+          -H 'accept: application/json' \
+          -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
+          -H 'Content-Type: application/json' \
+          -d '{
+              "json":{
+                  "applicationId": "${{ secrets.DOKPLOY_APP_ID }}",
+              }
+          }'
