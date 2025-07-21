@@ -23,6 +23,7 @@ COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/package.json ./
 
 ENV PORT=3000
+ENV NODE_ENV=production
 
 FROM setup AS runner
 
