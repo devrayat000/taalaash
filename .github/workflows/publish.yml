@@ -49,6 +49,8 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}
             ghcr.io/${{ github.repository }}:${{ env.SHORT_SHA }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   trigger-deploy:
     runs-on: ubuntu-24.04
