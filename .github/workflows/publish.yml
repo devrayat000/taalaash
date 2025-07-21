@@ -49,12 +49,3 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}
             ghcr.io/${{ github.repository }}:${{ env.SHORT_SHA }}
-
-      - name: Trigger Dokploy Deployment
-        run: |
-          curl -X 'POST' \
-          'http://31.97.206.20:3000/api/trpc/application.deploy' \
-          -H 'accept: application/json' \
-          -H 'x-api-key: ${{ secrets.DOKPLOY_API_KEY }}' \
-          -H 'Content-Type: application/json' \
-          -d "{\"json\": {\"applicationId\": \"${{ secrets.DOKPLOY_APP_ID }}\"}}"
