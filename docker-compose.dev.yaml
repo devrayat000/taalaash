@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: watcher
+      target: runner
     image: taalaash/web:latest
     environment:
       - OCR_URL=http://rubizcode-ai-backend:7501

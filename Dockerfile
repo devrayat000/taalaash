@@ -4,11 +4,7 @@ FROM base AS installer
 
 WORKDIR /app
 
-COPY package.json ./
-COPY bun.lock ./
-
-ENV NITRO_PRESET=bun
-
+COPY package.json bun.lock ./
 
 FROM installer AS watcher
 
@@ -37,13 +33,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --production
 
 COPY . ./
 
 RUN bun run build
 
-FROM base AS setup
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
@@ -53,9 +49,5 @@ COPY --from=builder /app/package.json ./
 ENV PORT=3000
 ENV NODE_ENV=production
 
-FROM setup AS runner
-
-WORKDIR /app
-
-EXPOSE $PORT
-CMD ["bun", "run", ".output/server/index.mjs"]
+EXPOSE 3000
+CMD ["node", ".output/server/index.mjs"]
