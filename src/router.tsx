@@ -9,12 +9,17 @@ const context = {
 
 export type Context = typeof context;
 
+const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+
+const basepath = hostname === "admin.taalaash.com" ? "/admin" : "/";
+
 export function createRouter() {
 	const router = createTanStackRouter({
 		routeTree,
 		scrollRestoration: true,
 		defaultPreload: "intent",
 		context,
+		basepath,
 	});
 
 	return router;
