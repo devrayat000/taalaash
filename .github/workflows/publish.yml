@@ -49,3 +49,17 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}
             ghcr.io/${{ github.repository }}:${{ env.SHORT_SHA }}
+
+  trigger-deploy:
+    runs-on: ubuntu-24.04
+    needs: build-and-push
+
+    steps:
+      - name: Trigger Dokploy Deployment
+        run: |
+          curl -X 'POST' \
+          'http://31.97.206.20:3000/api/application.deploy' \
+          -H 'accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -H 'Authorization: Bearer <token>' \
+          -d "{\"json\": {\"applicationId\": \"${{ secrets.DOKPLOY_APP_ID }}\"}}"
