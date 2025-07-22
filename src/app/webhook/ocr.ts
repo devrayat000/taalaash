@@ -1,7 +1,17 @@
 import { createPost } from "@/server/post/action";
 import { indexDocuments } from "@/server/post/action/indexing";
 import { createServerFileRoute } from "@tanstack/react-start/server";
-import { z } from "zod";
+import {
+	object,
+	string,
+	url,
+	prettifyError,
+	array,
+	number,
+	record,
+	any,
+	optional,
+} from "zod/v4-mini";
 import {
 	TransactionManager,
 	createDatabaseInsertStep,
@@ -9,53 +19,138 @@ import {
 	createOCRBatchWithS3RollbackStep,
 } from "@/lib/transaction-manager";
 
-// Schema for validating webhook payload
-const ocrResultSchema = z.object({
-	id: z.string(),
-	created_at: z.string(),
-	updated_at: z.string(),
-	file_url: z.string().url(),
-	text: z.string(),
-	metadata: z.object({
-		chapterId: z.string(),
-		page: z.number().optional(),
-		keywords: z.array(z.string()).optional(),
-		custom_data: z.record(z.string(), z.any()).optional(),
-	}),
-	error: z.string().optional(),
-});
+// Schema for validating webhook payload with custom error messages
+const ocrResultSchema = object(
+	{
+		id: string(),
+		created_at: string(),
+		updated_at: string(),
+		file_url: url(),
+		text: string(),
+		metadata: object(
+			{
+				chapterId: string(),
+				page: optional(number()),
+				keywords: optional(array(string())),
+				custom_data: optional(record(string(), any())),
+			},
+			"OCR result metadata validation failed",
+		),
+		error: optional(string()),
+	},
+	"OCR result schema validation failed",
+);
 
-const webhookPayloadSchema = z.object({
-	batch_id: z.string(),
-	results: z.array(ocrResultSchema),
-	timestamp: z.string(),
-});
+const webhookPayloadSchema = object(
+	{
+		batch_id: string(),
+		results: array(ocrResultSchema),
+		timestamp: string(),
+	},
+	"Webhook payload validation failed",
+);
 
 export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 	POST: async ({ request }) => {
+		const requestStartTime = Date.now();
+		const requestId = `ocr-webhook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
 		try {
-			console.log("OCR webhook received");
+			console.log(
+				`[${requestId}] 🎯 OCR webhook received at ${new Date().toISOString()}`,
+			);
 
 			// Parse the request body
-			const body = await request.json();
-			console.log("Webhook payload:", JSON.stringify(body, null, 2));
+			let body: unknown;
+			try {
+				body = await request.json();
+				console.log(
+					`[${requestId}] 📥 Request body parsed successfully. Size: ${JSON.stringify(body).length} chars`,
+				);
+			} catch (parseError) {
+				console.error(
+					`[${requestId}] ❌ Failed to parse request body:`,
+					parseError,
+				);
+				return new Response(
+					JSON.stringify({
+						success: false,
+						error: "Invalid JSON in request body",
+						requestId,
+						timestamp: new Date().toISOString(),
+					}),
+					{
+						status: 400,
+						headers: { "Content-Type": "application/json" },
+					},
+				);
+			}
 
-			// Validate the payload
-			const validatedData = webhookPayloadSchema.parse(body);
+			// Validate the payload with detailed error logging using safeParse
+			const validationResult = webhookPayloadSchema.safeParse(body);
+			if (!validationResult.success) {
+				const prettyError = prettifyError(validationResult.error);
+				console.error(`[${requestId}] ❌ Payload validation failed:`, {
+					error: prettyError,
+					receivedPayload: body,
+					validationDetails: validationResult.error.issues.map((err) => ({
+						path: err.path.join("."),
+						message: err.message,
+						code: err.code,
+						received: "received" in err ? err.received : undefined,
+					})),
+				});
+
+				return new Response(
+					JSON.stringify({
+						success: false,
+						error: "Payload validation failed",
+						prettyError,
+						validationErrors: validationResult.error.issues.map((err) => ({
+							field: err.path.join("."),
+							message: err.message,
+							receivedValue: "received" in err ? err.received : undefined,
+						})),
+						requestId,
+						timestamp: new Date().toISOString(),
+					}),
+					{
+						status: 400,
+						headers: { "Content-Type": "application/json" },
+					},
+				);
+			}
+
+			const validatedData = validationResult.data;
+			console.log(`[${requestId}] ✅ Payload validation successful`);
+
 			const { batch_id, results, timestamp } = validatedData;
 
 			console.log(
-				`Processing batch ${batch_id} with ${results.length} results`,
+				`[${requestId}] 🔄 Processing batch ${batch_id} with ${results.length} results (received at ${timestamp})`,
 			);
 
 			// Filter out results with errors and extract successful OCR results
 			const successfulResults = results.filter((result) => !result.error);
 			const errorResults = results.filter((result) => result.error);
 
+			console.log(`[${requestId}] 📊 Batch ${batch_id} analysis:`, {
+				totalResults: results.length,
+				successfulResults: successfulResults.length,
+				errorResults: errorResults.length,
+				batchTimestamp: timestamp,
+			});
+
 			if (errorResults.length > 0) {
 				console.warn(
-					`${errorResults.length} results had errors:`,
-					errorResults.map((r) => r.error),
+					`[${requestId}] ⚠️ ${errorResults.length} results had errors:`,
+					errorResults.map((r, idx) => ({
+						index: idx,
+						fileUrl: r.file_url,
+						error: r.error,
+						chapterId: r.metadata?.chapterId,
+						page: r.metadata?.page,
+					})),
 				);
 			}
 
@@ -95,7 +190,11 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 					);
 
 					console.log(
-						`✅ Successfully completed emergency rollback for batch ${batch_id}`,
+						`[${requestId}] ✅ Successfully completed emergency rollback for batch ${batch_id}:`,
+						{
+							rolledBackObjects: s3Keys.length,
+							processingTime: `${Date.now() - requestStartTime}ms`,
+						},
 					);
 
 					// Return failure response indicating rollback was performed
@@ -103,11 +202,14 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 						JSON.stringify({
 							success: false,
 							batch_id,
+							requestId,
 							message: `Batch failed with ${(failureRate * 100).toFixed(1)}% failure rate. Rollback completed.`,
 							processed: 0,
 							batch_failure_rate: failureRate,
 							rollback_completed: true,
 							rolled_back_objects: s3Keys.length,
+							processing_time_ms: Date.now() - requestStartTime,
+							timestamp: new Date().toISOString(),
 						}),
 						{
 							status: 200, // 200 because webhook was processed successfully
@@ -116,8 +218,17 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 					);
 				} catch (rollbackError) {
 					console.error(
-						`❌ Failed to rollback batch ${batch_id}:`,
-						rollbackError,
+						`[${requestId}] ❌ Failed to rollback batch ${batch_id}:`,
+						{
+							error: rollbackError,
+							stack:
+								rollbackError instanceof Error
+									? rollbackError.stack
+									: undefined,
+							batchId: batch_id,
+							s3KeysRequiringManualCleanup: s3Keys,
+							processingTime: `${Date.now() - requestStartTime}ms`,
+						},
 					);
 
 					// Return error response indicating rollback failed
@@ -125,6 +236,7 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 						JSON.stringify({
 							success: false,
 							batch_id,
+							requestId,
 							message: `Batch failed with ${(failureRate * 100).toFixed(1)}% failure rate. Rollback FAILED.`,
 							processed: 0,
 							batch_failure_rate: failureRate,
@@ -135,6 +247,8 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 									? rollbackError.message
 									: "Unknown rollback error",
 							s3_keys_requiring_manual_cleanup: s3Keys,
+							processing_time_ms: Date.now() - requestStartTime,
+							timestamp: new Date().toISOString(),
 						}),
 						{
 							status: 500,
@@ -292,30 +406,30 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				}
 			}
 
-			const totalProcessed = processedResults.reduce(
-				(sum, r) => sum + r.processedCount,
-				0,
-			);
-			const totalIndexed = processedResults.reduce(
-				(sum, r) => sum + r.indexedCount,
-				0,
-			);
-			const totalCreated = processedResults.reduce(
-				(sum, r) => sum + r.createdPostsCount,
-				0,
-			);
-			const totalErrors = processedResults.reduce(
-				(sum, r) => sum + r.errors,
-				0,
-			);
+			const { totalProcessed, totalIndexed, totalCreated, totalErrors } =
+				processedResults.reduce(
+					(acc, r) => ({
+						totalProcessed: acc.totalProcessed + r.processedCount,
+						totalIndexed: acc.totalIndexed + r.indexedCount,
+						totalCreated: acc.totalCreated + r.createdPostsCount,
+						totalErrors: acc.totalErrors + r.errors,
+					}),
+					{
+						totalProcessed: 0,
+						totalIndexed: 0,
+						totalCreated: 0,
+						totalErrors: 0,
+					},
+				);
 
-			console.log(`Batch ${batch_id} processing complete:`, {
+			console.log(`[${requestId}] 📊 Batch ${batch_id} processing complete:`, {
 				totalProcessed,
 				totalIndexed,
 				totalCreated,
 				totalErrors: totalErrors + errorResults.length,
 				batchSize: results.length,
 				batchFailureRate: failureRate,
+				processingTime: `${Date.now() - requestStartTime}ms`,
 			});
 
 			// Return success response
@@ -323,6 +437,7 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				JSON.stringify({
 					success: true,
 					batch_id,
+					requestId,
 					timestamp,
 					summary: {
 						totalResults: results.length,
@@ -336,6 +451,7 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 						requiresRollback: failureRate > FAILURE_THRESHOLD,
 					},
 					details: processedResults,
+					processing_time_ms: Date.now() - requestStartTime,
 				}),
 				{
 					status: 200,
@@ -343,14 +459,24 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				},
 			);
 		} catch (error) {
-			console.error("Error processing OCR webhook:", error);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			console.error(`[${requestId}] ❌ OCR webhook processing failed:`, {
+				requestId,
+				batch_id: webhookData?.batch_id || "unknown",
+				timestamp,
+				error: errorMessage,
+				stack: error instanceof Error ? error.stack : undefined,
+				processingTime: `${Date.now() - requestStartTime}ms`,
+			});
 
-			// Return error response
 			return new Response(
 				JSON.stringify({
 					success: false,
-					error: error instanceof Error ? error.message : "Unknown error",
-					timestamp: new Date().toISOString(),
+					error: "Internal server error during OCR processing",
+					requestId,
+					timestamp,
+					processing_time_ms: Date.now() - requestStartTime,
 				}),
 				{
 					status: 500,
