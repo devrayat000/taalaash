@@ -28,7 +28,7 @@ export type PostByIdData = {
 
 export const getPostById = createServerFn({ method: "GET" })
 	.validator(string())
-	.handler(async ({ data: id }): Promise<PostByIdData | null> => {
+	.handler(async ({ data: id }) => {
 		const postData = await db
 			.select({
 				id: post.id,
