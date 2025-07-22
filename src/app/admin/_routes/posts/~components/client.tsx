@@ -24,11 +24,6 @@ export const PostsClient: React.FC = () => {
 				/>
 				<div className="flex items-center gap-2">
 					<Button asChild>
-						<Link to="/admin/posts/$postId" params={{ postId: "bulk" }}>
-							<Plus className="mr-2 h-4 w-4" /> Bulk Upload
-						</Link>
-					</Button>
-					<Button asChild>
 						<Link to="/admin/posts/$postId" params={{ postId: "new" }}>
 							<Plus className="mr-2 h-4 w-4" /> Add New
 						</Link>

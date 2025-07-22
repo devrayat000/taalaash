@@ -2,6 +2,12 @@ import { createPost } from "@/server/post/action";
 import { indexDocuments } from "@/server/post/action/indexing";
 import { createServerFileRoute } from "@tanstack/react-start/server";
 import { z } from "zod";
+import {
+	TransactionManager,
+	createDatabaseInsertStep,
+	createPineconeIndexStep,
+	createOCRBatchWithS3RollbackStep,
+} from "@/lib/transaction-manager";
 
 // Schema for validating webhook payload
 const ocrResultSchema = z.object({
@@ -53,13 +59,101 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				);
 			}
 
+			// Calculate failure rate
+			const failureRate = errorResults.length / results.length;
+			const FAILURE_THRESHOLD = 0.5; // 50% failure threshold
+
+			// If failure rate is too high, trigger immediate rollback
+			if (failureRate > FAILURE_THRESHOLD) {
+				console.error(
+					`🚨 CRITICAL FAILURE: Batch ${batch_id} has high failure rate: ${(failureRate * 100).toFixed(1)}% (${errorResults.length}/${results.length} failed)`,
+				);
+
+				// Extract S3 keys from all results for rollback
+				const s3Keys = results.map((result) => {
+					// Extract S3 key from file URL
+					const url = new URL(result.file_url);
+					return url.pathname.substring(1); // Remove leading slash
+				});
+
+				console.error(
+					`Triggering immediate rollback for batch ${batch_id} with ${s3Keys.length} S3 objects`,
+				);
+
+				// Create rollback transaction
+				const rollbackTransaction = new TransactionManager();
+				const rollbackStepId = `emergency-rollback-${batch_id}`;
+
+				try {
+					rollbackTransaction.addStep(
+						createOCRBatchWithS3RollbackStep(rollbackStepId, batch_id, s3Keys),
+					);
+					rollbackTransaction.markCompleted(rollbackStepId);
+
+					await rollbackTransaction.rollback(
+						`Emergency rollback for failed OCR batch ${batch_id} (${(failureRate * 100).toFixed(1)}% failure rate)`,
+					);
+
+					console.log(
+						`✅ Successfully completed emergency rollback for batch ${batch_id}`,
+					);
+
+					// Return failure response indicating rollback was performed
+					return new Response(
+						JSON.stringify({
+							success: false,
+							batch_id,
+							message: `Batch failed with ${(failureRate * 100).toFixed(1)}% failure rate. Rollback completed.`,
+							processed: 0,
+							batch_failure_rate: failureRate,
+							rollback_completed: true,
+							rolled_back_objects: s3Keys.length,
+						}),
+						{
+							status: 200, // 200 because webhook was processed successfully
+							headers: { "Content-Type": "application/json" },
+						},
+					);
+				} catch (rollbackError) {
+					console.error(
+						`❌ Failed to rollback batch ${batch_id}:`,
+						rollbackError,
+					);
+
+					// Return error response indicating rollback failed
+					return new Response(
+						JSON.stringify({
+							success: false,
+							batch_id,
+							message: `Batch failed with ${(failureRate * 100).toFixed(1)}% failure rate. Rollback FAILED.`,
+							processed: 0,
+							batch_failure_rate: failureRate,
+							rollback_attempted: true,
+							rollback_failed: true,
+							rollback_error:
+								rollbackError instanceof Error
+									? rollbackError.message
+									: "Unknown rollback error",
+							s3_keys_requiring_manual_cleanup: s3Keys,
+						}),
+						{
+							status: 500,
+							headers: { "Content-Type": "application/json" },
+						},
+					);
+				}
+			}
+
 			if (successfulResults.length === 0) {
 				console.log("No successful results to process");
 				return new Response(
 					JSON.stringify({
-						success: true,
+						success: successfulResults.length > 0,
+						batch_id,
 						message: "No successful results to process",
 						processed: 0,
+						batch_failure_rate: failureRate,
+						requires_rollback: failureRate > FAILURE_THRESHOLD,
 					}),
 					{
 						status: 200,
@@ -91,30 +185,43 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 					`Processing ${chapterResults.length} results for chapter ${chapterId}`,
 				);
 
+				const transaction = new TransactionManager();
+
 				try {
 					// Prepare documents for indexing: only non-empty text
 					const docsToIndex = chapterResults
 						.map((r) => ({ id: r.id, text: r.text.trim() }))
 						.filter((doc) => doc.text.length > 0);
 
-					let indexedDocs = [];
+					let indexedResult = { documents: [], documentIds: [], count: 0 };
+					const documentIds: string[] = [];
 
-					// Index documents if there's text to index
+					// Step 1: Index documents if there's text to index
 					if (docsToIndex.length > 0) {
 						console.log(
 							`Indexing ${docsToIndex.length} documents for chapter ${chapterId}`,
 						);
-						indexedDocs = await indexDocuments({
+						indexedResult = await indexDocuments({
 							data: {
 								documents: docsToIndex,
 								chapterId: chapterId,
 							},
 						});
-						console.log(`Successfully indexed ${indexedDocs.length} documents`);
+
+						// Track Pinecone indexing for rollback
+						documentIds.push(...indexedResult.documentIds);
+						const pineconeStepId = `pinecone-index-${chapterId}`;
+						transaction.addStep(
+							createPineconeIndexStep(pineconeStepId, documentIds),
+						);
+						transaction.markCompleted(pineconeStepId);
+
+						console.log(
+							`Successfully indexed ${indexedResult.count} documents`,
+						);
 					}
 
-					// Create posts in database
-					// When creating posts, include all metadata fields
+					// Step 2: Create posts in database
 					const postsToCreate = chapterResults.map((result, index) => {
 						const pageNumber = result.metadata.page || index + 1;
 						console.log(
@@ -134,17 +241,45 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 						`Creating ${postsToCreate.length} posts for chapter ${chapterId}`,
 					);
 					const createdPosts = await createPost({ data: postsToCreate });
+
+					// Track database inserts for rollback
+					const postIds = postsToCreate.map((post) => post.id);
+					const dbStepId = `database-insert-${chapterId}`;
+					transaction.addStep(createDatabaseInsertStep(dbStepId, postIds));
+					transaction.markCompleted(dbStepId);
+
 					console.log(`Successfully created ${createdPosts.length} posts`);
+
+					// If we reach here, chapter processing succeeded
+					console.log(`Chapter ${chapterId} processing completed successfully`);
+					transaction.cleanup();
 
 					processedResults.push({
 						chapterId,
 						processedCount: chapterResults.length,
-						indexedCount: indexedDocs.length,
+						indexedCount: indexedResult.count,
 						createdPostsCount: createdPosts.length,
-						errors: chapterResults.filter((r) => r.error).length,
+						errors: 0,
+						transaction_summary: transaction.getSummary(),
 					});
 				} catch (error) {
 					console.error(`Error processing chapter ${chapterId}:`, error);
+
+					// Rollback chapter-specific changes
+					try {
+						await transaction.rollback(
+							`Chapter ${chapterId} processing failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+						);
+						console.log(
+							`Successfully rolled back changes for chapter ${chapterId}`,
+						);
+					} catch (rollbackError) {
+						console.error(
+							`Rollback failed for chapter ${chapterId}:`,
+							rollbackError,
+						);
+					}
+
 					processedResults.push({
 						chapterId,
 						processedCount: 0,
@@ -152,6 +287,7 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 						createdPostsCount: 0,
 						errors: chapterResults.length,
 						error: error instanceof Error ? error.message : "Unknown error",
+						rollback_attempted: true,
 					});
 				}
 			}
@@ -177,8 +313,9 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				totalProcessed,
 				totalIndexed,
 				totalCreated,
-				totalErrors,
+				totalErrors: totalErrors + errorResults.length,
 				batchSize: results.length,
+				batchFailureRate: failureRate,
 			});
 
 			// Return success response
@@ -194,7 +331,9 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 						totalProcessed,
 						totalIndexed,
 						totalCreated,
-						totalErrors,
+						totalErrors: totalErrors + errorResults.length,
+						batchFailureRate: failureRate,
+						requiresRollback: failureRate > FAILURE_THRESHOLD,
 					},
 					details: processedResults,
 				}),

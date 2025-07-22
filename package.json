@@ -1,6 +1,6 @@
 {
 	"name": "bio-search-next",
-	"version": "0.1.4-test",
+	"version": "0.1.5",
 	"private": true,
 	"type": "module",
 	"scripts": {
