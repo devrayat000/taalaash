@@ -1,14 +1,15 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import {
 	array,
-	integer,
+	int,
 	number,
 	object,
 	optional,
 	pipe,
 	string,
-} from "valibot";
-import { Suspense } from "react";
+	_default,
+} from "zod/v4-mini";
+import { Fragment, Suspense } from "react";
 
 import SearchForm from "./~components/search-form";
 import SearchResults from "./~components/search-results";
@@ -20,6 +21,7 @@ import { getRequestURL } from "@tanstack/react-start/server";
 import { getPosts } from "@/server/post/service";
 import { searchRecords } from "@/server/search/service";
 import { SlidersHorizontal } from "lucide-react";
+import Lottie from "lottie-react";
 import {
 	Sheet,
 	SheetContent,
@@ -28,6 +30,46 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import searchinglg from "@/assets/animation/searching.json";
+import searchingsm from "@/assets/animation/search_imm.json";
+import { useWindowSize } from "@uidotdev/usehooks";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_root/_routes/_search/search/")({
+	component: SearchPage,
+	validateSearch: object({
+		query: string(),
+		page: _default(optional(int()), 1),
+		subject: optional(array(string())),
+		edition: optional(array(string())),
+		books: optional(array(string())),
+		chapters: optional(array(string())),
+	}),
+	loaderDeps: ({ search: { query, page } }) => ({ query, page }),
+	loader: async ({ deps, context }) => {
+		console.log("Loading search results with deps:", deps);
+		context.queryClient.ensureQueryData({
+			queryKey: ["posts", deps],
+			queryFn: () => searchRecords({ data: { ...deps, limit: 12 } }),
+			staleTime: 1000 * 60 * 5, // 5 minutes
+		});
+	},
+});
+
+function SearchLoader() {
+	const { width } = useWindowSize();
+	return (
+		width !== null && (
+			<div className="flex items-center justify-center h-full">
+				<Lottie
+					animationData={width > 768 ? searchinglg : searchingsm}
+					loop
+					className={cn(width <= 768 && "scale-150")}
+				/>
+			</div>
+		)
+	);
+}
 
 function SearchPage() {
 	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
@@ -38,7 +80,6 @@ function SearchPage() {
 			<div className="flex flex-col lg:hidden items-stretch gap-3 mb-4">
 				<SearchForm />
 
-				{/* Mobile Filter Button */}
 				<div className="flex items-center justify-between">
 					<div className="text-sm text-muted-foreground">
 						Showing results for "{searchParams.query}"
@@ -87,39 +128,16 @@ function SearchPage() {
 						</div>
 					</div>
 
-					<ScrollArea className="h-[calc(100vh-16rem)] lg:h-[calc(100vh-12rem)]">
-						<div className="pr-2">
-							<Suspense fallback={<ResultSkeleton />}>
+					{/* <ScrollArea className="h-[calc(100vh-16rem)] lg:h-[calc(100vh-12rem)]"> */}
+					<div className="pr-2 h-[calc(100vh-16rem)]">
+						<SearchLoader />
+						{/* <Suspense fallback={<SearchLoader />}>
 								<SearchResults />
-							</Suspense>
-						</div>
-					</ScrollArea>
+							</Suspense> */}
+					</div>
+					{/* </ScrollArea> */}
 				</main>
 			</section>
 		</div>
 	);
 }
-
-export const Route = createFileRoute("/_root/_routes/_search/search/")({
-	component: SearchPage,
-	validateSearch: object({
-		query: string(),
-		page: optional(pipe(number(), integer()), 1),
-		subject: optional(array(string())),
-		edition: optional(array(string())),
-		books: optional(array(string())),
-		chapters: optional(array(string())),
-	}),
-	loaderDeps: ({ search: { query, page } }) => ({ query, page }),
-	loader: async ({ deps, context }) => {
-		console.log("Loading search results with deps:", deps);
-
-		const posts = await searchRecords({ data: { ...deps, limit: 12 } });
-		await context.queryClient.ensureQueryData({
-			queryKey: ["posts", deps],
-			queryFn: () => posts,
-			staleTime: 1000 * 60 * 5, // 5 minutes
-		});
-		return { posts: { data: posts, count: 12 } };
-	},
-});

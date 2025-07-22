@@ -1,43 +1,25 @@
 import { use } from "react";
 import without from "lodash/without";
 
-import { postIndex } from "@/lib/algolia";
-import ResultCard, { ResultCardProps } from "./result-card";
+import ResultCard from "./result-card";
 import PostPagination from "./pagination";
 import { SearchSchema, searchSchema } from "./searchSchema";
 import { useLoaderData, useSearch } from "@tanstack/react-router";
+import { searchRecords } from "@/server/search/service";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export default function SearchResults() {
-	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
-	console.log("Results", searchParams.books);
+	const { query, page } = useSearch({ from: "/_root/_routes/_search/search/" });
+	const { data } = useSuspenseQuery({
+		queryKey: ["posts", { query, page }] as const,
+		queryFn: ({ queryKey: [, params] }) =>
+			searchRecords({ data: { ...params, limit: 12 } }),
+		staleTime: 1000 * 60 * 5, // 5 minutes
+	});
 
-	// const { page: currentPage, query, subjects, chapters, books } = searchParams;
-
-	// const results = use(
-	//   postIndex.search<ResultCardProps>(query, {
-	//     optionalWords: query,
-	//     hitsPerPage: 12,
-	//     page: currentPage - 1,
-	//     cacheable: true,
-	//     attributesToRetrieve: [
-	//       "objectID",
-	//       "imageUrl",
-	//       "book",
-	//       "chapter",
-	//       "keywords",
-	//     ],
-	//     facetFilters: [
-	//       subjects?.map((subject) => `subject.name:${subject}`) || [],
-	//       books?.map((book) => `book.name:${book}`) || [],
-	//       chapters?.map((chapter) => `chapter.name:${chapter}`) || [],
-	//     ],
-	//   })
-	// );
-
-	const loaderData = useLoaderData({ from: "/_root/_routes/_search/search/" });
 	// Defensive: handle not found or missing data
-	const posts = loaderData?.posts?.data ?? [];
-	const count = loaderData?.posts?.count ?? 0;
+	const posts = data ?? [];
+	const count = 0;
 
 	return (
 		<div className="@container/grid w-full">

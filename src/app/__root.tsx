@@ -24,6 +24,7 @@ import { Context } from "@/router";
 import { authClient } from "@/lib/auth-client";
 import { getCurrentUser } from "@/server/middleware";
 import { Toaster } from "@/components/ui/sonner";
+import { seo } from "@/lib/seo";
 
 // const inter = Inter({ subsets: ["latin"], variable: "--inter" });
 // const tiroBangla = Tiro_Bangla({
@@ -71,12 +72,34 @@ import { Toaster } from "@/components/ui/sonner";
 export const Route = createRootRouteWithContext<Context>()({
 	head: () => ({
 		meta: [
-			{ charSet: "utf-8" },
-			{
-				name: "viewport",
-				content: "width=device-width, initial-scale=1",
-			},
-			{ title: "TanStack Start Starter" },
+			...seo({
+				title: "Taalaash - তালাশ",
+				url: "https://taalaash.com",
+				siteName: "Taalaash",
+				description: `প্রতিটা পরীক্ষার পর প্রশ্ন সলভ করতে হয়। প্রশ্ন, অপশন
+				খুঁজতে আমাদের শত শত ঘন্টা অপচয় হয়। এই টুলস
+				ব্যবহার করলে আপনি সেকেন্ডের মাঝেই রেফারেন্স
+				খুঁজে পাবেন। বইয়ের কোথায় আছে, কীভাবে আছে,
+				কোন বইতে আছে সবকিছু দেখতে পাবেন সেকেন্ডের
+				মাঝে। বয়াকাডেমিকে অবশ্যই কাজে লাগাবে। ভর্তি
+				পরীক্ষায় যেন এই টুলস তোমার ডে টু ডে ব্যবহারের
+				সঙ্গী হয়।`.replace(/\s+/g, " "),
+				keywords: [
+					"বাংলা শিক্ষা",
+					"পরীক্ষার প্রস্তুতি",
+					"বই খোঁজা",
+					"রেফারেন্স খোঁজা",
+					"শিক্ষা সহায়ক",
+					"ভর্তি পরীক্ষা",
+					"question solver",
+					"bangladesh education",
+					"academic help",
+				],
+				author: {
+					name: "Zul Ikram Musaddik Rayat",
+					url: "https://twitter.com/zul_rayat",
+				},
+			}),
 		],
 		links: [
 			{
@@ -106,6 +129,7 @@ export const Route = createRootRouteWithContext<Context>()({
 			dehydratedState: dehydrate(queryClient),
 		};
 	},
+	wrapInSuspense: true,
 });
 
 function RootLayout() {
