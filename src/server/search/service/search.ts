@@ -6,14 +6,13 @@ import { notFound } from "@tanstack/react-router";
 import {
 	object,
 	string,
-	pipe,
 	optional,
 	array,
-	number,
 	int,
 	minLength,
 	_default,
 	type infer as Infer,
+	positive,
 } from "zod/mini";
 
 const searchSchema = object({
@@ -23,13 +22,10 @@ const searchSchema = object({
 	subject: optional(array(string())),
 	chapter: optional(array(string())),
 	book: optional(array(string())),
-	limit: _default(optional(int()), 12),
+	limit: _default(optional(int().check(positive())), 12),
 });
 
 const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
-	console.log("Search data:", data);
-
-	await new Promise((resolve) => setTimeout(resolve, 10000)); // Simulate delay
 	const searchWithText = await pineconeIndex.searchRecords({
 		query: {
 			topK: data.limit,
@@ -41,13 +37,13 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 			},
 		},
 		fields: ["id"],
-		// rerank: {
-		// 	model: "pinecone-rerank-v0",
-		// 	rankFields: ["text"],
-		// 	topN: data.limit,
-		// },
+		rerank: {
+			model: "pinecone-rerank-v0",
+			rankFields: ["text"],
+			topN: data.limit,
+		},
 	});
-	console.log("Search results:", searchWithText.result.hits.length);
+	console.log("Search results:", searchWithText.result.hits);
 	if (!searchWithText.result.hits.length) {
 		throw notFound({
 			data: {
