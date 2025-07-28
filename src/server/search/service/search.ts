@@ -55,7 +55,6 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 	const postsByIds = await getFilteredPosts({
 		data: { posts: searchWithText.result.hits.map((hit) => hit._id) },
 	});
-	console.log("Posts by IDs:", postsByIds);
 
 	if (!postsByIds.length) {
 		throw notFound({
