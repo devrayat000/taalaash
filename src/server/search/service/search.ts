@@ -38,7 +38,7 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 		},
 		fields: ["id"],
 		rerank: {
-			model: "pinecone-rerank-v0",
+			model: "cohere-rerank-3.5",
 			rankFields: ["text"],
 			topN: data.limit,
 		},
