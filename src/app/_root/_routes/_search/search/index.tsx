@@ -128,14 +128,13 @@ function SearchPage() {
 						</div>
 					</div>
 
-					{/* <ScrollArea className="h-[calc(100vh-16rem)] lg:h-[calc(100vh-12rem)]"> */}
-					<div className="pr-2 h-[calc(100vh-16rem)]">
-						<SearchLoader />
-						{/* <Suspense fallback={<SearchLoader />}>
+					<ScrollArea className="h-[calc(100vh-16rem)] lg:h-[calc(100vh-12rem)]">
+						<div className="pr-2 h-[calc(100vh-16rem)]">
+							<Suspense fallback={<SearchLoader />}>
 								<SearchResults />
-							</Suspense> */}
-					</div>
-					{/* </ScrollArea> */}
+							</Suspense>
+						</div>
+					</ScrollArea>
 				</main>
 			</section>
 		</div>
