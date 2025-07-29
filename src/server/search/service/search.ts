@@ -28,7 +28,7 @@ const searchSchema = object({
 const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 	const searchWithText = await pineconeIndex.searchRecords({
 		query: {
-			topK: data.limit,
+			topK: data.limit * 3,
 			inputs: { text: data.query },
 			filter: {
 				subject: data.subject ? { $in: data.subject } : undefined,
