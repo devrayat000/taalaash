@@ -1,4 +1,12 @@
 /// <reference types="vite/client" />
+
+// declare umami with window so that I can access window.umami in the code
+declare global {
+	interface Window {
+		umami: any;
+	}
+}
+
 import { ToastProvider } from "@/providers/toast-provider";
 import {
 	Outlet,
@@ -106,6 +114,20 @@ export const Route = createRootRouteWithContext<Context>()({
 				rel: "stylesheet",
 				href: appCss,
 			},
+		],
+		scripts: [
+			process.env.VITE_ANALYTICS === "1" ||
+			import.meta.env.VITE_ANALYTICS === "1"
+				? {
+						src:
+							process.env.VITE_ANALYTICS_SCRIPT ||
+							import.meta.env.VITE_ANALYTICS_SCRIPT,
+						defer: true,
+						"data-website-id":
+							process.env.VITE_ANALYTICS_ID ||
+							import.meta.env.VITE_ANALYTICS_ID,
+					}
+				: {},
 		],
 	}),
 	component: RootLayout,
