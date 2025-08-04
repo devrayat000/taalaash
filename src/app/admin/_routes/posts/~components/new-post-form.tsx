@@ -27,7 +27,7 @@ import {
 import { Loader } from "@/components/ui/loader";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
-import { getAllSubjects } from "@/server/subject/service";
+import { getSubjectsFn } from "@/server/subject/function";
 import { bulkUploadWithOCR } from "@/server/post/action/indexing";
 
 const postFormSchema = z.object({
@@ -177,7 +177,7 @@ export const NewPostForm = () => {
 
 	const { data: subjects } = useQuery({
 		queryKey: ["subjects"],
-		queryFn: () => getAllSubjects(),
+		queryFn: () => getSubjectsFn().then((res) => res.data),
 		initialData: [],
 	});
 

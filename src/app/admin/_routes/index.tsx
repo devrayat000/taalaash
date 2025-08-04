@@ -22,7 +22,7 @@ import { getUserCount } from "@/server/user/service";
 import { countBooks } from "@/server/book/service";
 import { countChapters } from "@/server/chapter/service";
 import { countPosts } from "@/server/post/service";
-import { countSubjects } from "@/server/subject/service";
+import { countSubjectsFn } from "@/server/subject/function";
 
 interface DashboardPageProps {
 	params: {
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/admin/_routes/")({
 				countBooks(),
 				countChapters(),
 				countPosts(),
-				countSubjects(),
+				countSubjectsFn(),
 			]);
 		return {
 			userCount,

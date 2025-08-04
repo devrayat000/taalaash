@@ -1,40 +1,70 @@
 import { hashKey } from "@tanstack/react-query";
 import redis from "@/lib/redis";
 
-type CacheOptions = {
+type CacheOptions<Args extends any[]> = {
 	ttl?: number; // Time to live in seconds
-	tags?: string[]; // Tags for cache invalidation
+	tags?: string[] | ((...args: Args) => string[]); // Tags for cache invalidation
+	prefix?: string;
 };
 
 export type UseCacheOptions<T extends (...args: any[]) => any> = [
 	fn: T,
-	options?: CacheOptions,
+	options?: CacheOptions<Parameters<T>>,
 ];
 
-export function useCache<T extends (...args: any[]) => any>(
+type CacheMeta = {
+	ttl: number;
+	hit: boolean;
+};
+
+type WithCacheResult<T> = {
+	data: T;
+	__meta: CacheMeta;
+};
+
+export function withCache<T extends (...args: any[]) => any>(
 	...options: UseCacheOptions<T>
 ) {
-	return async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
+	return async (
+		...args: Parameters<T>
+	): Promise<WithCacheResult<Awaited<ReturnType<T>>>> => {
 		const [fn, opts] = options;
-		const cacheKey = hashKey([fn.name, ...args]);
-		const cachedValue = await redis.get(cacheKey);
+		const cacheHash = hashKey([fn.name, ...args]);
+		const cacheKey = `cache:${opts?.prefix || "default"}:${cacheHash}`;
 
+		const cachedValue = await redis.get(cacheKey);
 		if (cachedValue) {
-			return JSON.parse(cachedValue) as Awaited<ReturnType<T>>;
+			const ttl = await redis.ttl(cacheKey);
+			const data = JSON.parse(cachedValue) as Awaited<ReturnType<T>>;
+			return {
+				data,
+				__meta: {
+					ttl,
+					hit: true,
+				},
+			};
 		}
 
 		const result = await fn(...args);
-		await redis.set(cacheKey, JSON.stringify(result), {
-			EX: opts?.ttl ?? 60 * 60, // Cache for 1 hour
-		});
+		const ttl = opts?.ttl ?? 60 * 60;
+
+		await redis.set(cacheKey, JSON.stringify(result), { EX: ttl });
 
 		if (opts?.tags) {
-			for (const tag of opts.tags) {
+			const tags =
+				typeof opts.tags === "function" ? opts.tags(...args) : opts.tags;
+			for (const tag of tags) {
 				await redis.sAdd(`cache:tag:${tag}`, cacheKey);
 			}
 		}
 
-		return result;
+		return {
+			data: result,
+			__meta: {
+				ttl,
+				hit: false,
+			},
+		};
 	};
 }
 

@@ -5,7 +5,7 @@ import FilterSheet from "./filters/sheet";
 import FilterSidebar from "./filters/sidebar";
 import { useSearch } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { getAllSubjects } from "@/server/subject/service";
+import { getAllSubjects } from "@/server/subject/function";
 
 // TODO: Implement progressive filtering
 export default function Filters() {

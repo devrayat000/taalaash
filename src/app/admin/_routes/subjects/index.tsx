@@ -3,14 +3,14 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { ServerTableStoreProvider } from "@/providers/server-table-provider";
 import { SubjectsClient } from "./~components/client";
 import { searchParamsSchema } from "@/lib/schemas";
-import { getSubjects } from "@/server/subject/service";
+import { getSubjectsFn } from "@/server/subject/function";
 import { useQuery } from "@tanstack/react-query";
 
 const SizesPage = async () => {
 	const search = useSearch({ from: "/admin/_routes/subjects/" });
 	const { data } = useQuery({
 		queryKey: ["subjects", search],
-		queryFn: () => getSubjects({ data: search }),
+		queryFn: () => getSubjectsFn({ data: search }),
 	});
 
 	return (
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/admin/_routes/subjects/")({
 	async loader({ context, deps }) {
 		await context.queryClient.ensureQueryData({
 			queryKey: ["subjects", deps],
-			queryFn: () => getSubjects({ data: deps }),
+			queryFn: () => getSubjectsFn({ data: deps }),
 		});
 	},
 });

@@ -11,10 +11,10 @@ import { Heading } from "@/components/ui/heading";
 import { AlertModal } from "@/components/modals/alert-modal";
 import { subject } from "@/db/schema";
 import {
-	createSubject,
-	deleteSubject,
-	updateSubject,
-} from "@/server/subject/action/subject";
+	deleteSubjectFn,
+	createSubjectFn,
+	updateSubjectFn,
+} from "@/server/subject/function";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
 import { Label } from "@/components/ui/label";
@@ -54,10 +54,10 @@ export const SubjectForm: React.FC<SubjectFormProps> = ({ initialData }) => {
 				setLoading(true);
 
 				if (initialData) {
-					await updateSubject({ data: { id: initialData.id, params: data } });
+					await updateSubjectFn({ data: { id: initialData.id, params: data } });
 					navigate({ reloadDocument: true });
 				} else {
-					const { id } = await createSubject({ data });
+					const { id } = await createSubjectFn({ data });
 					navigate({
 						to: "/admin/subjects/$subjectId",
 						params: { subjectId: id },
@@ -76,7 +76,7 @@ export const SubjectForm: React.FC<SubjectFormProps> = ({ initialData }) => {
 		try {
 			setLoading(true);
 			if (typeof params.subjectId === "string")
-				await deleteSubject({ data: { id: params.subjectId } });
+				await deleteSubjectFn({ data: { id: params.subjectId } });
 			navigate({
 				to: "/admin/subjects",
 			});

@@ -3,7 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
 
 import { getPostById } from "@/server/post/service";
-import { getAllSubjects } from "@/server/subject/service";
+import { getSubjectsFn } from "@/server/subject/function";
 import { getBooksBySubject } from "@/server/book/action/book";
 import { getChaptersByBooks } from "@/server/chapter/action/chapter";
 import { PostForm } from "./~components/post-form";
@@ -54,7 +54,7 @@ export const Route = createFileRoute("/admin/_routes/posts/$postId")({
 		}
 		const subjects = await context.queryClient.ensureQueryData({
 			queryKey: ["subjects"],
-			queryFn: () => getAllSubjects(),
+			queryFn: () => getSubjectsFn(),
 		});
 		return { subjects };
 	},

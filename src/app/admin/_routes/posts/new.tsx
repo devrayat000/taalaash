@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { NewPostForm } from "./~components/new-post-form";
-import { getAllSubjects } from "@/server/subject/service";
+import { getSubjectsFn } from "@/server/subject/function";
 
 export const Route = createFileRoute("/admin/_routes/posts/new")({
 	component: RouteComponent,
 	async loader({ context }) {
 		const subjects = await context.queryClient.ensureQueryData({
 			queryKey: ["subjects"],
-			queryFn: () => getAllSubjects(),
+			queryFn: () => getSubjectsFn(),
 		});
 		return { subjects };
 	},
