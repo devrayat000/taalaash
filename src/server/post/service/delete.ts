@@ -19,7 +19,14 @@ export async function deletePost(params: Infer<typeof deletePostSchema>) {
 		.returning()
 		.execute();
 
-	await invalidateTags("posts", `post:${params.id}`);
+	await invalidateTags(
+		"posts",
+		"posts-all",
+		"posts-filtered",
+		"post-count",
+		"posts:indexing",
+		`post:${params.id}`,
+	);
 
 	return deletedPost[0];
 }
@@ -33,7 +40,14 @@ export async function deleteManyPosts(
 		.returning()
 		.execute();
 
-	await invalidateTags("posts", ...params.ids.map((id) => `post:${id}`));
+	await invalidateTags(
+		"posts",
+		"posts-all",
+		"posts-filtered",
+		"post-count",
+		"posts:indexing",
+		...params.ids.map((id) => `post:${id}`),
+	);
 
 	return deletedPosts;
 }

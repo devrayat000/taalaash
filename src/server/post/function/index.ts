@@ -1,3 +1,7 @@
 export * from "./count";
 export * from "./delete";
-// TODO: Consolidate remaining get services and complete post module migration
+export * from "./create";
+export * from "./upload";
+export * from "./indexing";
+export * from "./highlight";
+export * from "./get";

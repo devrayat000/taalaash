@@ -1,6 +1,6 @@
 import { pineconeIndex } from "@/lib/pinecone";
 import { authed } from "@/server/middleware";
-import { getFilteredPosts } from "@/server/post/service/get-filtered-posts";
+import { getPosts } from "@/server/post/service/get";
 import { createServerFn, serverOnly } from "@tanstack/react-start";
 import { notFound } from "@tanstack/react-router";
 import {
@@ -52,9 +52,14 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 		});
 	}
 
-	const postsByIds = await getFilteredPosts({
-		data: { posts: searchWithText.result.hits.map((hit) => hit._id) },
+	const { data: postsResult } = await getPosts({
+		ids: searchWithText.result.hits.map((hit) => hit._id),
 	});
+
+	// Handle the fact that getPosts can return either an array or paginated result
+	const postsByIds = Array.isArray(postsResult)
+		? postsResult
+		: postsResult.data;
 
 	console.log("Filtered posts count:", postsByIds.length);
 
@@ -72,7 +77,7 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 export const searchRecords = createServerFn({ method: "GET" })
 	.middleware([authed])
 	.validator(searchSchema)
-	.handler(async ({ context, data, signal }) => {
+	.handler(async ({ data }) => {
 		console.log("Search data:", data);
 
 		const [searchResults] = await Promise.all([

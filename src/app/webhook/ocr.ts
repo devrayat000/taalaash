@@ -1,5 +1,5 @@
-import { createPost } from "@/server/post/action";
-import { indexDocuments } from "@/server/post/action/indexing";
+import { createPost } from "@/server/post/service/create";
+import { indexDocuments } from "@/server/post/service/indexing";
 import { createServerFileRoute } from "@tanstack/react-start/server";
 import {
 	object,
@@ -307,7 +307,11 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 						.map((r) => ({ id: r.id, text: r.text.trim() }))
 						.filter((doc) => doc.text.length > 0);
 
-					let indexedResult = { documents: [], documentIds: [], count: 0 };
+					let indexedResult: {
+						documents: { id: string; text: string }[];
+						documentIds: string[];
+						count: number;
+					} = { documents: [], documentIds: [], count: 0 };
 					const documentIds: string[] = [];
 
 					// Step 1: Index documents if there's text to index
@@ -316,10 +320,8 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 							`Indexing ${docsToIndex.length} documents for chapter ${chapterId}`,
 						);
 						indexedResult = await indexDocuments({
-							data: {
-								documents: docsToIndex,
-								chapterId: chapterId,
-							},
+							documents: docsToIndex,
+							chapterId: chapterId,
 						});
 
 						// Track Pinecone indexing for rollback
@@ -354,7 +356,7 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 					console.log(
 						`Creating ${postsToCreate.length} posts for chapter ${chapterId}`,
 					);
-					const createdPosts = await createPost({ data: postsToCreate });
+					const createdPosts = await createPost(postsToCreate);
 
 					// Track database inserts for rollback
 					const postIds = postsToCreate.map((post) => post.id);

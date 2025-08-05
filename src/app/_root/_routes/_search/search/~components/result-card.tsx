@@ -1,12 +1,32 @@
 "use client";
 
-import { PostHit } from "@/server/post/service";
 import BookmarkButton from "./bookmark";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePopup } from "@/providers/popup-provider";
 import { useSearch } from "@tanstack/react-router";
-import type { PostWithAllRelations } from "@/server/post/service/get-filtered-posts";
+
+// Type for a single post from getPosts function
+type PostWithAllRelations = {
+	id: string;
+	page: number | null;
+	keywords: string[] | null;
+	imageUrl: string;
+	createdAt: Date;
+	chapterId: string;
+	chapter: {
+		id: string;
+		name: string;
+	};
+	book: {
+		id: string;
+		name: string;
+	};
+	subject: {
+		id: string;
+		name: string;
+	};
+};
 
 export default function ResultCard(post: PostWithAllRelations) {
 	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
@@ -24,11 +44,11 @@ export default function ResultCard(post: PostWithAllRelations) {
 		<article className="rounded-lg overflow-hidden shadow-lg">
 			<div className="relative isolate aspect-[3/4] rounded-t-inherit border-border border">
 				<img
-					src={post.imageUrl!}
+					src={post.imageUrl || "/placeholder.svg"}
 					alt={post.book.name}
 					className="rounded-inherit object-cover"
 				/>
-				{/* <BookmarkButton postId={post.objectID} /> */}
+				<BookmarkButton postId={post.id} />
 			</div>
 			<div className="bg-card-result p-3 space-y-4">
 				<div className="">
@@ -36,12 +56,6 @@ export default function ResultCard(post: PostWithAllRelations) {
 						{post.book.name}
 					</h6>
 					<div className="flex gap-x-2 h-full items-center">
-						<span className="block text-xs leading-none">
-							{post.book.edition} - Edition
-						</span>
-
-						<span className="rounded-full block w-1 h-1 bg-muted-foreground"></span>
-
 						<p className="text-xs rounded-full leading-none justify-self-end">
 							{post.chapter.name}
 						</p>
