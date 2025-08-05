@@ -1,24 +1,11 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
-import {
-	array,
-	int,
-	number,
-	object,
-	optional,
-	pipe,
-	string,
-	_default,
-} from "zod/v4-mini";
-import { Fragment, Suspense } from "react";
+import { createFileRoute, redirect, useSearch } from "@tanstack/react-router";
+import { array, int, object, optional, string, _default } from "zod/mini";
+import { Suspense } from "react";
 
 import SearchForm from "./~components/search-form";
 import SearchResults from "./~components/search-results";
-import { ResultSkeleton } from "./~components/result-card";
 import Filters from "./~components/filters";
-import { SearchSchema } from "./~components/searchSchema";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getRequestURL } from "@tanstack/react-start/server";
-import { getPosts } from "@/server/post/service";
 import { searchRecords } from "@/server/search/service";
 import { SlidersHorizontal } from "lucide-react";
 import Lottie from "lottie-react";
@@ -45,6 +32,15 @@ export const Route = createFileRoute("/_root/_routes/_search/search/")({
 		books: optional(array(string())),
 		chapters: optional(array(string())),
 	}),
+	beforeLoad({ search }) {
+		if (!search.query.trim()) {
+			throw redirect({
+				to: "/",
+				reloadDocument: true,
+				replace: true,
+			});
+		}
+	},
 	loaderDeps: ({ search: { query, page } }) => ({ query, page }),
 	loader: async ({ deps, context }) => {
 		console.log("Loading search results with deps:", deps);
