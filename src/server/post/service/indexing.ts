@@ -16,6 +16,12 @@ import {
 	createOCRBatchWithS3RollbackStep,
 } from "@/lib/transaction-manager";
 import { uploadPostImages } from "./upload";
+import {
+	generateKey,
+	exportKey,
+	createSignature,
+	generateKeyId,
+} from "@/lib/webhook-crypto";
 
 export const recognizeTextSchema = instanceof_(FormData);
 
@@ -187,17 +193,48 @@ export const bulkUploadWithOCR = async (
 			images: images,
 		};
 
+		// Create webhook verification key and prepare headers
+		const webhookHeaders: Record<string, string> = {
+			"Content-Type": "application/json",
+		};
+
+		// Add webhook verification data
+		const webhookKey = process.env.WEBHOOK_VERIFICATION_KEY;
+		const keyId = process.env.WEBHOOK_KEY_ID || "default";
+
+		if (webhookKey) {
+			try {
+				// Generate signature for the OCR payload
+				const payloadText = JSON.stringify(ocrPayload);
+				const { importKey, createSignature, createSignatureHeader } =
+					await import("@/lib/webhook-crypto");
+				const key = await importKey(webhookKey);
+				const signature = await createSignature(payloadText, key, keyId);
+				const signatureHeader = createSignatureHeader(signature);
+
+				webhookHeaders["X-Webhook-Signature"] = signatureHeader;
+				console.log(
+					`Added webhook signature to OCR request with key: ${keyId}`,
+				);
+			} catch (sigError) {
+				console.error("Failed to create webhook signature:", sigError);
+				// Continue without signature for development
+			}
+		} else {
+			console.warn(
+				"No WEBHOOK_VERIFICATION_KEY configured, sending unsigned OCR request",
+			);
+		}
+
 		const ocrUrl = new URL(
 			"/v1/taalaash/bulk-upload",
 			process.env.OCR_URL || "http://127.0.0.1:8001",
 		);
 
-		console.log("Sending files to OCR pipeline with metadata...");
+		console.log("Sending files to OCR pipeline with metadata and signature...");
 		const ocrResponse = await fetch(ocrUrl, {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
+			headers: webhookHeaders,
 			body: JSON.stringify(ocrPayload),
 			signal,
 		});

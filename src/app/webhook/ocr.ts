@@ -18,6 +18,10 @@ import {
 	createPineconeIndexStep,
 	createOCRBatchWithS3RollbackStep,
 } from "@/lib/transaction-manager";
+import {
+	verifyWebhookRequest,
+	initializeWebhookVerification,
+} from "@/lib/webhook-verification";
 
 // Schema for validating webhook payload with custom error messages
 const ocrResultSchema = object(
@@ -60,12 +64,44 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				`[${requestId}] 🎯 OCR webhook received at ${new Date().toISOString()}`,
 			);
 
+			// Initialize webhook verification system
+			await initializeWebhookVerification();
+
+			// Get the raw body for verification
+			const bodyText = await request.text();
+
+			// Verify webhook signature
+			const verificationResult = await verifyWebhookRequest(request, bodyText);
+			if (!verificationResult.verified) {
+				console.error(
+					`[${requestId}] ❌ Webhook verification failed:`,
+					verificationResult.error,
+				);
+				return new Response(
+					JSON.stringify({
+						success: false,
+						error: "Webhook verification failed",
+						details: verificationResult.error,
+						requestId,
+						timestamp: new Date().toISOString(),
+					}),
+					{
+						status: 401,
+						headers: { "Content-Type": "application/json" },
+					},
+				);
+			}
+
+			console.log(
+				`[${requestId}] ✅ Webhook verification successful with key: ${verificationResult.keyId}`,
+			);
+
 			// Parse the request body
 			let body: unknown;
 			try {
-				body = await request.json();
+				body = JSON.parse(bodyText);
 				console.log(
-					`[${requestId}] 📥 Request body parsed successfully. Size: ${JSON.stringify(body).length} chars`,
+					`[${requestId}] 📥 Request body parsed successfully. Size: ${bodyText.length} chars`,
 				);
 			} catch (parseError) {
 				console.error(
@@ -465,8 +501,6 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 				error instanceof Error ? error.message : String(error);
 			console.error(`[${requestId}] ❌ OCR webhook processing failed:`, {
 				requestId,
-				batch_id: webhookData?.batch_id || "unknown",
-				timestamp,
 				error: errorMessage,
 				stack: error instanceof Error ? error.stack : undefined,
 				processingTime: `${Date.now() - requestStartTime}ms`,
@@ -477,7 +511,7 @@ export const ServerRoute = createServerFileRoute("/webhook/ocr").methods({
 					success: false,
 					error: "Internal server error during OCR processing",
 					requestId,
-					timestamp,
+					timestamp: new Date().toISOString(),
 					processing_time_ms: Date.now() - requestStartTime,
 				}),
 				{

@@ -3,7 +3,7 @@ import { Suspense, useState } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
 import { FileImageIcon, Paperclip } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Toaster as Sonner, ToasterProps, toast } from "sonner";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { getBooksBySubject } from "@/server/book/action/book";
-import { getChaptersByBooks } from "@/server/chapter/action/chapter";
+import { getChaptersByBookFn } from "@/server/chapter/function/get";
 import {
 	FileUploader,
 	FileUploaderContent,
@@ -28,7 +28,7 @@ import { Loader } from "@/components/ui/loader";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { getSubjectsFn } from "@/server/subject/function";
-import { bulkUploadWithOCR } from "@/server/post/action/indexing";
+import { bulkUploadWithOCRFn } from "@/server/post/function/indexing";
 
 const postFormSchema = z.object({
 	subjectId: z.string().min(1),
@@ -133,7 +133,7 @@ export const NewPostForm = () => {
 				);
 
 				// Call the new bulk upload with OCR workflow
-				const result = await bulkUploadWithOCR({ data: formData });
+				const result = await bulkUploadWithOCRFn({ data: formData });
 
 				console.log("Bulk upload initiated:", result);
 
@@ -191,7 +191,7 @@ export const NewPostForm = () => {
 	const bookId = useStore(form.store, (state) => state.values.bookAuthorId);
 	const { data: chaptersByBook } = useQuery({
 		queryKey: ["chapters", bookId],
-		queryFn: () => getChaptersByBooks({ data: { id: bookId } }),
+		queryFn: () => getChaptersByBookFn({ data: { bookAuthorId: bookId } }),
 		enabled: !!bookId,
 	});
 
