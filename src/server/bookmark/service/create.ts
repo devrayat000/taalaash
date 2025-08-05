@@ -10,6 +10,11 @@ export const toggleBookmarkSchema = object({
 	initial: boolean(),
 });
 
+export const toggleBookmarkClientSchema = object({
+	postId: uuid(),
+	initial: boolean(),
+});
+
 export const createBookmarkSchema = object({
 	postId: uuid(),
 	userId: uuid(),

@@ -11,7 +11,7 @@ import {
 	users,
 } from "@/db/schema";
 import db from "@/lib/db";
-import type { PostWithAllRelations } from "@/server/post/service/get";
+import { getPosts } from "@/server/post/service/get";
 
 const bookmarkedPostByProviderIdStatement = db
 	.select({
@@ -24,19 +24,14 @@ const bookmarkedPostByProviderIdStatement = db
 		chapter: {
 			id: chapter.id,
 			name: chapter.name,
-			createdAt: chapter.createdAt,
-			bookAuthorId: chapter.bookAuthorId,
 		},
 		book: {
 			id: bookAuthor.id,
 			name: bookAuthor.name,
-			edition: bookAuthor.edition,
-			marked: bookAuthor.marked,
 		},
 		subject: {
 			id: subject.id,
 			name: subject.name,
-			createdAt: subject.createdAt,
 		},
 	})
 	.from(bookmark)
@@ -71,6 +66,13 @@ export const getBookmarkedPosts = withCache(
 			.innerJoin(users, eq(bookmark.userId, users.id))
 			.where(eq(users.id, userId))
 			.orderBy(desc(bookmark.createdAt));
+
+		const { data: posts } = await getPosts({
+			ids: bookmarkedIds.map((b) => b.postId),
+		});
+
+		// Handle potential paginated result
+		return Array.isArray(posts) ? posts : posts.data;
 	},
 	{
 		prefix: "user-bookmarks",
@@ -113,6 +115,27 @@ export const getBookmarkedPostsByProviderId = withCache(
 );
 
 // Export types
+type PostWithAllRelations = {
+	id: string;
+	page: number | null;
+	keywords: string[] | null;
+	imageUrl: string;
+	createdAt: Date;
+	chapterId: string;
+	chapter: {
+		id: string;
+		name: string;
+	};
+	book: {
+		id: string;
+		name: string;
+	};
+	subject: {
+		id: string;
+		name: string;
+	};
+};
+
 export type BookmarkedPosts = PostWithAllRelations[];
 export type BookmarkedList = Awaited<
 	ReturnType<typeof getBookmarkedList>

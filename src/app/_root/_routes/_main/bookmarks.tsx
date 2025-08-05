@@ -6,6 +6,27 @@ import { ServerStoreProvider } from "@/hooks/use-server-data";
 import ResultCard from "../_search/search/~components/result-card";
 import { Link } from "@tanstack/react-router";
 
+type BookmarkedPost = {
+	id: string;
+	page: number | null;
+	keywords: string[] | null;
+	imageUrl: string;
+	createdAt: Date;
+	chapterId: string;
+	chapter: {
+		id: string;
+		name: string;
+	};
+	book: {
+		id: string;
+		name: string;
+	};
+	subject: {
+		id: string;
+		name: string;
+	};
+};
+
 function BookmarksPage() {
 	const posts = Route.useLoaderData();
 
@@ -43,12 +64,12 @@ function BookmarksPage() {
 
 						<ServerStoreProvider
 							initialData={{
-								bookmarks: posts.map((p) => ({ postId: p.id })),
+								bookmarks: posts.map((p: BookmarkedPost) => ({ postId: p.id })),
 								searchHistory: [],
 							}}
 						>
 							<section className="grid @md/grid:grid-cols-2 @lg/grid:grid-cols-3 @xl/grid:grid-cols-4 gap-4 py-8">
-								{posts?.map((hit) => (
+								{posts?.map((hit: BookmarkedPost) => (
 									<ResultCard key={hit.id} {...hit} />
 								))}
 							</section>
