@@ -1,5 +1,5 @@
 import { searchParamsSchema } from "@/lib/schemas";
-import { getPosts } from "@/server/post/service";
+import { getPostsFn } from "@/server/post/function";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
@@ -10,7 +10,7 @@ const PostsPage = () => {
 	const search = useSearch({ from: "/admin/_routes/posts/" });
 	const { data } = useSuspenseQuery({
 		queryKey: ["posts", search],
-		queryFn: () => getPosts({ data: search }),
+		queryFn: () => getPostsFn({ data: search }),
 	});
 
 	return (
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/admin/_routes/posts/")({
 	async loader({ context, deps }) {
 		await context.queryClient.ensureQueryData({
 			queryKey: ["posts", deps],
-			queryFn: () => getPosts({ data: deps }),
+			queryFn: () => getPostsFn({ data: deps }),
 		});
 	},
 });
