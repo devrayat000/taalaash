@@ -1,12 +1,6 @@
-import { auth } from "@/lib/auth";
 import { authClient } from "@/lib/auth-client";
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
-import { redirect } from "@tanstack/react-router";
-import {
-	getHeaders,
-	isError,
-	setResponseStatus,
-} from "@tanstack/react-start/server";
+import { getHeaders, setResponseStatus } from "@tanstack/react-start/server";
 
 export const authed = createMiddleware({ type: "function" }).server(
 	async ({ next, signal }) => {
