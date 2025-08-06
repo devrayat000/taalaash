@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AlertModal } from "@/components/modals/alert-modal";
 
-import { PostColumn } from "./columns";
+import type { PostColumn } from "./columns";
 import { deletePostFn } from "@/server/post/function";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -43,8 +43,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 	};
 
 	const onCopy = (id: string) => {
-		navigator.clipboard.writeText(id);
-		toast.message("Post ID copied to clipboard.");
+		toast.promise(navigator.clipboard.writeText(id), {
+			success: "Post ID copied to clipboard.",
+		});
 	};
 
 	return (

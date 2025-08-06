@@ -27,8 +27,9 @@ export const ApiAlert: React.FC<ApiAlertProps> = ({
 	variant = "public",
 }) => {
 	const onCopy = (description: string) => {
-		navigator.clipboard.writeText(description);
-		toast.success("API Route copied to clipboard.");
+		toast.promise(navigator.clipboard.writeText(description), {
+			success: "API Route copied to clipboard.",
+		});
 	};
 
 	return (
