@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
 import { AlertModal } from "@/components/modals/alert-modal";
 
 import { PostColumn } from "./columns";
-import { deletePost } from "@/server/post/action";
+import { deletePostFn } from "@/server/post/function";
 import { useNavigate } from "@tanstack/react-router";
 
 interface CellActionProps {
@@ -28,14 +28,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 	const onConfirm = async () => {
 		try {
 			setLoading(true);
-			await deletePost(data.id);
-			toast({ description: "Post deleted." });
+			await deletePostFn(data.id);
+			toast.success("Success", { description: "Post deleted." });
 			navigate({ reloadDocument: true });
 		} catch (error) {
-			toast({
+			toast.error("Error", {
 				description:
 					"Make sure you removed all products using this size first.",
-				variant: "destructive",
 			});
 		} finally {
 			setOpen(false);
@@ -45,7 +44,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 
 	const onCopy = (id: string) => {
 		navigator.clipboard.writeText(id);
-		toast({ description: "Post ID copied to clipboard." });
+		toast.message("Post ID copied to clipboard.");
 	};
 
 	return (

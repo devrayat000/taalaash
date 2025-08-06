@@ -1,6 +1,6 @@
-import * as z from "zod";
+import { object, string, minLength, type z } from "zod/mini";
 import { useState, useTransition } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Trash } from "lucide-react";
 import type { InferSelectModel } from "drizzle-orm";
 
@@ -19,8 +19,8 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
 import { Label } from "@/components/ui/label";
 
-const formSchema = z.object({
-	name: z.string().min(1),
+const formSchema = object({
+	name: string().check(minLength(1)),
 });
 
 type SubjectFormValues = z.infer<typeof formSchema>;
@@ -63,9 +63,9 @@ export const SubjectForm: React.FC<SubjectFormProps> = ({ initialData }) => {
 						params: { subjectId: id },
 					});
 				}
-				toast({ description: toastMessage });
+				toast.success(toastMessage);
 			} catch (error: any) {
-				toast({ description: "Something went wrong.", variant: "destructive" });
+				toast.error("Something went wrong.");
 			} finally {
 				setLoading(false);
 			}
@@ -80,13 +80,11 @@ export const SubjectForm: React.FC<SubjectFormProps> = ({ initialData }) => {
 			navigate({
 				to: "/admin/subjects",
 			});
-			toast({ description: "Subject deleted." });
+			toast.success("Subject deleted.");
 		} catch (error: any) {
-			toast({
-				description:
-					"Make sure you removed all products using this subject first.",
-				variant: "destructive",
-			});
+			toast.error(
+				"Make sure you removed all products using this subject first.",
+			);
 		} finally {
 			setLoading(false);
 			setOpen(false);

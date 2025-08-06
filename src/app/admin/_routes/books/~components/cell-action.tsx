@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
@@ -29,15 +29,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 		try {
 			setLoading(true);
 			await deleteBook({ data: { id: data.id } });
-			toast({ description: "Book deleted." });
+			toast.success("Book deleted.");
 			navigate({ reloadDocument: true });
 			// router.refresh();
 		} catch {
-			toast({
-				description:
-					"Make sure you removed all products using this size first.",
-				variant: "destructive",
-			});
+			toast.error("Make sure you removed all products using this size first.");
 		} finally {
 			setOpen(false);
 			setLoading(false);
@@ -46,7 +42,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 
 	const onCopy = (id: string) => {
 		navigator.clipboard.writeText(id);
-		toast({ description: "Book ID copied to clipboard." });
+		toast.message("Book ID copied to clipboard.");
 	};
 
 	return (

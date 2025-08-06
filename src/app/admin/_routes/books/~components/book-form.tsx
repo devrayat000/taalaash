@@ -1,9 +1,9 @@
-import * as z from "zod";
+import { z } from "zod/mini";
 import { use, useEffect, useRef, useState } from "react";
 import { Trash } from "lucide-react";
 import type { InferSelectModel } from "drizzle-orm";
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -27,18 +27,19 @@ import { useForm } from "@tanstack/react-form";
 import { Label } from "@/components/ui/label";
 
 let formSchema = z.object({
-	name: z.string().min(1),
-	subjectId: z.string().min(1),
-	edition: z.string().min(1),
-	marked: z.boolean().default(false),
+	name: z.string().check(z.minLength(1)),
+	subjectId: z.string().check(z.minLength(1)),
+	edition: z.string().check(z.minLength(1)),
+	marked: z._default(z.boolean(), false),
 });
 
 if (typeof window !== "undefined") {
-	formSchema = formSchema.extend({
-		embed: z
-			.instanceof(globalThis.File)
-			.refine((file) => file.size > 0, "File cannot be empty")
-			.nullable(),
+	formSchema = z.extend(formSchema, {
+		embed: z.nullable(
+			z
+				.instanceof(globalThis.File)
+				.check(z.refine((file) => file.size > 0, "File cannot be empty")),
+		),
 	});
 }
 
@@ -137,9 +138,9 @@ export const BookForm: React.FC<BookFormProps> = ({
 						params: { bookId: result.id },
 					});
 				}
-				toast({ description: toastMessage });
+				toast.success(toastMessage);
 			} catch {
-				toast({ description: "Something went wrong.", variant: "destructive" });
+				toast.error("Something went wrong.");
 			} finally {
 				setLoading(false);
 			}
@@ -163,13 +164,9 @@ export const BookForm: React.FC<BookFormProps> = ({
 			navigate({
 				to: "/admin/books",
 			});
-			toast({ description: "Book deleted." });
+			toast.success("Book deleted.");
 		} catch {
-			toast({
-				description:
-					"Make sure you removed all products using this book first.",
-				variant: "destructive",
-			});
+			toast.error("Make sure you removed all products using this book first.");
 		} finally {
 			setLoading(false);
 			setOpen(false);
