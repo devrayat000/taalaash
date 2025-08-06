@@ -41,7 +41,7 @@ export async function uploadImage(file: FormDataEntryValue, meta?: UploadMeta) {
 		const command = new PutObjectCommand(uploadParams);
 		const response = await s3Client.send(command);
 
-		const publicUrl = `https://${s3BucketName}.s3.amazonaws.com/${fileName}`;
+		const publicUrl = `${process.env.S3_CDN_ENDPOINT}/${fileName}`;
 
 		return {
 			success: true,
