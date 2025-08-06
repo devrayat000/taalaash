@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { authed } from "@/server/middleware";
 import {
 	toggleBookmark,
-	toggleBookmarkClientSchema,
+	toggleBookmarkSchema,
 	createBookmark,
 	createBookmarkSchema,
 	deleteBookmark,
@@ -11,7 +11,7 @@ import {
 
 export const toggleBookmarkFn = createServerFn({ method: "POST" })
 	.middleware([authed])
-	.validator(toggleBookmarkClientSchema)
+	.validator(toggleBookmarkSchema)
 	.handler(async ({ data: params, context }) => {
 		const result = await toggleBookmark({
 			...params,

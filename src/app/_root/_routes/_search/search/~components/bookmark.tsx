@@ -5,6 +5,7 @@ import { useServerStore } from "@/hooks/use-server-data";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useCallback, useOptimistic, useTransition } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export interface BookmarkButtonProps {
 	postId: string;
@@ -41,9 +42,11 @@ export default function BookmarkButton({ postId }: BookmarkButtonProps) {
 			queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
 			queryClient.invalidateQueries({ queryKey: ["bookmarked-posts"] });
 		},
-		onError: () => {
+		onError: (error) => {
 			// Revert optimistic update on error
 			toggleStoreBookmark(postId);
+			toast.error("Failed to update bookmark. Please try again.");
+			console.error("Bookmark error:", error);
 		},
 	});
 

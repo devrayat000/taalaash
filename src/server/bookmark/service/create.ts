@@ -2,31 +2,44 @@ import { invalidateTags } from "@/hooks/use-cache";
 import { bookmark } from "@/db/schema";
 import db from "@/lib/db";
 import { and, eq } from "drizzle-orm";
-import { object, uuid, boolean, type infer as Infer } from "zod/mini";
+import {
+	object,
+	uuid,
+	boolean,
+	string,
+	omit,
+	type infer as Infer,
+} from "zod/mini";
 
-export const toggleBookmarkSchema = object({
+const toggleBookmarkSchemaRaw = object({
 	postId: uuid(),
-	userId: uuid(),
+	userId: string(),
 	initial: boolean(),
 });
-
-export const toggleBookmarkClientSchema = object({
-	postId: uuid(),
-	initial: boolean(),
+export const toggleBookmarkSchema = omit(toggleBookmarkSchemaRaw, {
+	userId: true,
 });
 
-export const createBookmarkSchema = object({
+const createBookmarkSchemaRaw = object({
 	postId: uuid(),
-	userId: uuid(),
+	userId: string(),
 });
 
-export const deleteBookmarkSchema = object({
+export const createBookmarkSchema = omit(createBookmarkSchemaRaw, {
+	userId: true,
+});
+
+const deleteBookmarkSchemaRaw = object({
 	postId: uuid(),
-	userId: uuid(),
+	userId: string(),
+});
+
+export const deleteBookmarkSchema = omit(deleteBookmarkSchemaRaw, {
+	userId: true,
 });
 
 export async function toggleBookmark(
-	params: Infer<typeof toggleBookmarkSchema>,
+	params: Infer<typeof toggleBookmarkSchemaRaw>,
 ) {
 	const { postId, userId, initial } = params;
 
@@ -46,7 +59,7 @@ export async function toggleBookmark(
 }
 
 export async function createBookmark(
-	params: Infer<typeof createBookmarkSchema>,
+	params: Infer<typeof createBookmarkSchemaRaw>,
 ) {
 	const { postId, userId } = params;
 
@@ -60,7 +73,7 @@ export async function createBookmark(
 }
 
 export async function deleteBookmark(
-	params: Infer<typeof deleteBookmarkSchema>,
+	params: Infer<typeof deleteBookmarkSchemaRaw>,
 ) {
 	const { postId, userId } = params;
 

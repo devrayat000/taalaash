@@ -46,11 +46,11 @@ const bookmarkedPostByProviderIdStatement = db
 
 // Schemas
 export const getBookmarkedPostsSchema = object({
-	userId: uuid(),
+	userId: string(),
 });
 
 export const getBookmarkedListSchema = object({
-	userId: uuid(),
+	userId: string(),
 });
 
 export const getBookmarkedPostsByProviderIdSchema = object({
