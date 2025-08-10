@@ -3,14 +3,14 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { ServerTableStoreProvider } from "@/providers/server-table-provider";
 import { ChaptersClient } from "./~components/client";
 import { searchParamsSchema } from "@/lib/schemas";
-import { getChapters } from "@/server/chapter/service";
+import { getChaptersFn } from "@/server/chapter/function";
 import { useQuery } from "@tanstack/react-query";
 
 const ChaptersPage = async () => {
 	const search = useSearch({ from: "/admin/_routes/chapters/" });
 	const { data } = useQuery({
 		queryKey: ["chapters", search],
-		queryFn: () => getChapters({ data: search }),
+		queryFn: () => getChaptersFn({ data: search }),
 	});
 
 	return (
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/admin/_routes/chapters/")({
 	async loader({ context, deps }) {
 		await context.queryClient.ensureQueryData({
 			queryKey: ["chapters", deps],
-			queryFn: () => getChapters({ data: deps }),
+			queryFn: () => getChaptersFn({ data: deps }),
 		});
 	},
 });

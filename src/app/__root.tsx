@@ -143,7 +143,7 @@ export const Route = createRootRouteWithContext<Context>()({
 		}
 		return {
 			user: data?.user,
-			isAuthenticated: true,
+			isAuthenticated: !!data?.user,
 		};
 	},
 	loader() {

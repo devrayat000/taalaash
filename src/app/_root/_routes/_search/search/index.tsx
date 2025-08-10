@@ -50,7 +50,12 @@ export const Route = createFileRoute("/_root/_routes/_search/search/")({
 			staleTime: 1000 * 60 * 5, // 5 minutes
 		});
 	},
+	notFoundComponent: SearchNotFound,
 });
+
+function SearchNotFound() {
+	return <div>No results found, gg</div>;
+}
 
 function SearchLoader() {
 	const { width } = useWindowSize();

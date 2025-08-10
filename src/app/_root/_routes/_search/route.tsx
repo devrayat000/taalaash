@@ -1,5 +1,4 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import SearchHeader from "./~components/search-header";
 import { Fragment } from "react";
 import Header from "../../~components/header";
 
@@ -18,7 +17,10 @@ export const Route = createFileRoute("/_root/_routes/_search")({
 	component: SearchLayout,
 	async beforeLoad({ context }) {
 		if (!context.isAuthenticated) {
-			throw redirect({ to: "/", search: { error: "Unauthorized" } });
+			throw redirect({
+				to: "/signin",
+				search: { error: "You need to sign in before searching." },
+			});
 		}
 	},
 });

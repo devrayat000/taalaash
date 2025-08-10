@@ -1,12 +1,18 @@
-import { createClient } from "redis";
+import { createClient, type RedisClientType } from "redis";
 
-const redis = createClient({
-	url: process.env.REDIS_URL,
-});
+let redis: RedisClientType;
 
-redis.on("error", (err) => console.error("Redis Client Error", err));
-redis.on("connect", () => console.log("Redis Client Connected"));
+if (typeof window === "undefined") {
+	redis = createClient({
+		url: process.env.REDIS_URL,
+	});
 
-await redis.connect();
+	redis.on("error", (err) => console.error("Redis Client Error", err));
+	redis.on("connect", () => console.log("Redis Client Connected"));
+
+	await redis.connect();
+} else {
+	redis = undefined as unknown as RedisClientType;
+}
 
 export default redis;

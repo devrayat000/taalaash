@@ -76,21 +76,17 @@ const premiumUsers = [
 function LandingPage() {
 	const navigate = useNavigate();
 	const [inputValue, setInputValue] = useState("");
-
 	const onSubmit = useCallback(
 		(event: React.FormEvent<HTMLFormElement>) => {
 			event.preventDefault();
 			console.log(event.isDefaultPrevented());
-
 			const { action } = event.currentTarget;
 			// useSearchStore.getState().saveHistory(inputValue);
 			console.log("Submitting search with input:", action);
-
 			navigate({ to: "/search", search: { query: inputValue } });
 		},
 		[inputValue, navigate],
 	);
-
 	return (
 		<div className="min-h-screen bg-white">
 			{/* Main Content */}
@@ -99,7 +95,6 @@ function LandingPage() {
 				<div className="flex justify-center pt-6 pb-4">
 					<img src={logo} alt="Taalaash Logo" className="w-16 h-16" />
 				</div>
-
 				{/* Search Form */}
 				<form
 					className="max-w-sm mx-auto mb-6"
@@ -126,7 +121,6 @@ function LandingPage() {
 						</div>
 					</div>
 				</form>
-
 				{/* Popular Search Section */}
 				<div className="max-w-sm mx-auto mb-6">
 					<div className="space-y-3">
@@ -178,7 +172,6 @@ function LandingPage() {
 						</div>
 					</div>
 				</div>
-
 				{/* Most Searched Books */}
 				<div className="mb-6">
 					<h2 className="text-center text-gray-500 text-sm mb-3">
@@ -201,7 +194,6 @@ function LandingPage() {
 						))}
 					</div>
 				</div>
-
 				{/* Premium Users */}
 				<div>
 					<div className="flex items-center justify-center space-x-2 mb-3">

@@ -2,10 +2,10 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
-	consumeHighlight,
-	requestHighlight,
-} from "@/server/post/action/highlight";
-import { PostTable } from "@/server/post/service";
+	consumeHighlightFn,
+	requestHighlightFn,
+} from "@/server/post/function/highlight";
+// import { PostTable } from "@/server/post/service";
 import { useState, useEffect, useRef } from "react";
 import { create } from "zustand";
 
@@ -84,7 +84,7 @@ const HighlightedImage = ({
 				setIsLoading(true);
 				setError(null);
 
-				const { taskId } = await requestHighlight({
+				const { taskId } = await requestHighlightFn({
 					data: {
 						fileUrl: post.imageUrl,
 						searchText: searchText,
@@ -95,7 +95,7 @@ const HighlightedImage = ({
 					},
 					signal,
 				});
-				const response = await consumeHighlight({ data: { taskId }, signal });
+				const response = await consumeHighlightFn({ data: { taskId }, signal });
 
 				if (!response.ok) {
 					throw new Error("Failed to fetch highlights");
