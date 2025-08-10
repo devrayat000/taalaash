@@ -13,8 +13,6 @@ function SigninPage() {
 	const search = useSearch({ from: "/_root/_auth/signin" });
 
 	useEffect(() => {
-		console.log(search);
-
 		if (search.error) {
 			toast.error(search.error);
 		}
@@ -38,7 +36,7 @@ function SigninPage() {
 							onClick={() =>
 								authClient.signIn.social({
 									provider: "google",
-									// callbackURL: ""
+									callbackURL: search.redirect ?? "/",
 								})
 							}
 						>
@@ -75,5 +73,6 @@ export const Route = createFileRoute("/_root/_auth/signin")({
 	component: SigninPage,
 	validateSearch: object({
 		error: optional(string()),
+		redirect: optional(string()),
 	}),
 });

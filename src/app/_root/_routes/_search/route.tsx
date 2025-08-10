@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Fragment } from "react";
+import { string, object } from "zod/mini";
 import Header from "../../~components/header";
 
 function SearchLayout() {
@@ -15,11 +16,17 @@ function SearchLayout() {
 
 export const Route = createFileRoute("/_root/_routes/_search")({
 	component: SearchLayout,
-	async beforeLoad({ context }) {
+	validateSearch: object({
+		query: string(),
+	}),
+	async beforeLoad({ context, search }) {
 		if (!context.isAuthenticated) {
 			throw redirect({
 				to: "/signin",
-				search: { error: "You need to sign in before searching." },
+				search: {
+					error: "You need to sign in before searching.",
+					redirect: `/search?query=${encodeURIComponent(search.query)}`,
+				},
 			});
 		}
 	},

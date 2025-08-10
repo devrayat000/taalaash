@@ -5,7 +5,7 @@ import FilterSheet from "./filters/sheet";
 import FilterSidebar from "./filters/sidebar";
 import { useSearch } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { getAllSubjects } from "@/server/subject/function";
+import { getSubjectsFn } from "@/server/subject/function";
 
 // TODO: Implement progressive filtering
 export default function Filters() {
@@ -19,7 +19,7 @@ export default function Filters() {
 	// );
 	const { data: subjects } = useSuspenseQuery({
 		queryKey: ["subjects", searchParams.query],
-		queryFn: () => getAllSubjects(),
+		queryFn: () => getSubjectsFn(),
 	});
 
 	const { data: books } = useQuery({
@@ -67,7 +67,7 @@ export default function Filters() {
 	//   : undefined;
 
 	const initial = {
-		subjects: subjects?.map((s) => ({ value: s.name, count: 0 })) || [],
+		subjects: subjects.data?.map((s) => ({ value: s.name, count: 0 })) || [],
 		books: books,
 		chapters: chapters,
 		//   books: books,
