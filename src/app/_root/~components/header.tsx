@@ -40,11 +40,11 @@ export default function Header() {
 	return (
 		<header
 			className={cn(
-				"sticky px-10 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 top-0",
+				"sticky z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 top-0",
 			)}
 		>
 			{isAdmin && <AdminBar />}
-			<div className="container flex h-14 max-w-screen-2xl items-center justify-between">
+			<div className="container px-10 flex h-14 max-w-screen-2xl items-center justify-between">
 				{/* Logo and Brand */}
 				<div className="mr-4 hidden md:flex">
 					<Link to="/" className="mr-6 flex items-center space-x-2">
