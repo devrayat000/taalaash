@@ -37,7 +37,7 @@ RUN bun install --frozen-lockfile --production
 
 COPY . ./
 
-RUN RUN --mount=type=secret,id=REDIS_URL \
+RUN --mount=type=secret,id=REDIS_URL \
     --mount=type=secret,id=PINECONE_API_KEY \
     --mount=type=secret,id=PINECONE_INDEX_NAME \
     export REDIS_URL=$(cat /run/secrets/REDIS_URL) && \
