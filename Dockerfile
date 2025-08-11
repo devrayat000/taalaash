@@ -38,7 +38,7 @@ RUN bun install --frozen-lockfile --production
 COPY . ./
 
 RUN --mount=type=secret,id=envfile \
-    set -a; . /run/secrets/envfile; set +a; \
+    export $(grep -v '^#' /run/secrets/envfile | xargs) && \
     bun run build
 
 FROM node:20-alpine AS runner
