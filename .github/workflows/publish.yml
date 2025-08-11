@@ -39,6 +39,7 @@ jobs:
           echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+          echo "${{ secrets.DOTENV_ALL }}" > dotenv_all.env
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -46,6 +47,10 @@ jobs:
           context: .
           push: true
           target: runner
+          secrets: |            
+            BUILD_PHASE="1"
+          secret-files: |
+            envfile=dotenv_all.env
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}

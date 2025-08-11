@@ -3,26 +3,10 @@ import { authed } from "@/server/middleware";
 import { getPosts } from "@/server/post/service/get";
 import { createServerFn, serverOnly } from "@tanstack/react-start";
 import { notFound } from "@tanstack/react-router";
-import {
-	object,
-	string,
-	optional,
-	array,
-	int,
-	minLength,
-	_default,
-	type infer as Infer,
-	positive,
-} from "zod/mini";
+import type { infer as Infer } from "zod/mini";
 import { searchSchema } from "@/app/_root/_routes/_search/search/~components/searchSchema";
 
 const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
-	throw notFound({
-		data: {
-			message: "No posts found in the vector database.",
-		},
-		routeId: "/_root/_routes/_search/search/",
-	});
 	const searchWithText = await pineconeIndex.searchRecords({
 		query: {
 			topK: data.limit * 3,
@@ -41,7 +25,7 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 		},
 	});
 	console.log("Search results:", searchWithText.result.hits);
-	if (!false) {
+	if (!searchWithText.result.hits.length) {
 		throw notFound({
 			data: {
 				message: "No posts found in the vector database.",

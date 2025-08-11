@@ -89,9 +89,10 @@
 		"@types/react": "^19.1.8",
 		"@types/react-dom": "^19.1.6",
 		"@vitejs/plugin-react": "5.0.0",
-		"dotenv": "17.0.0",
+		"dotenv": "^17.2.1",
 		"drizzle-kit": "^0.31.1",
 		"eslint": "^9.29.0",
+		"nitropack": "2.12.4",
 		"postcss": "^8.5.6",
 		"tailwindcss": "^4.1.10",
 		"ts-node": "^10.9.2"

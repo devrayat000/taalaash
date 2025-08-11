@@ -37,7 +37,16 @@ RUN bun install --frozen-lockfile --production
 
 COPY . ./
 
-RUN bun run build
+# syntax=docker/dockerfile:1.7
+
+# syntax=docker/dockerfile:1.7
+
+
+
+RUN --mount=type=secret,id=envfile \
+  bun run --env-file=/run/secrets/envfile build
+
+
 
 FROM node:20-alpine AS runner
 

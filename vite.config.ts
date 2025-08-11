@@ -46,7 +46,7 @@ export default defineConfig({
 		tsconfigPaths(),
 	],
 	build: {
-		minify: true,
+		// minify: true,
 	},
 	// resolve: { external: ["postgres"] },
 });
