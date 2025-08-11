@@ -47,9 +47,10 @@ jobs:
           context: .
           push: true
           target: runner
-          secrets: |
-            envfile=dotenv_all.env
+          secrets: |            
             BUILD_PHASE="1"
+          secret-files: |
+            envfile=dotenv_all.env
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}
