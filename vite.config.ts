@@ -17,28 +17,28 @@ export default defineConfig({
 			},
 			customViteReactPlugin: true,
 			sitemap: { enabled: true, host: "https://taalaash.com" },
-			pages: [
-				{
-					path: "/",
-					prerender: { enabled: true },
-				},
-			],
-			prerender: {
-				filter: (page) => page.prerender?.enabled,
-				crawlLinks: false,
-				concurrency: 3,
-				autoSubfolderIndex: false,
-				enabled: true,
-				headers: {
-					"X-Content-Type-Options": "nosniff",
-					"X-Frame-Options": "DENY",
-					"X-XSS-Protection": "1; mode=block",
-					"Strict-Transport-Security":
-						"max-age=63072000; includeSubDomains; preload",
-					"Referrer-Policy": "no-referrer",
-					"X-Prerender-Mode": "auto",
-				},
-			},
+			// pages: [
+			// 	{
+			// 		path: "/",
+			// 		prerender: { enabled: true },
+			// 	},
+			// ],
+			// prerender: {
+			// 	filter: (page) => page.prerender?.enabled,
+			// 	crawlLinks: false,
+			// 	concurrency: 3,
+			// 	autoSubfolderIndex: false,
+			// 	enabled: true,
+			// 	headers: {
+			// 		"X-Content-Type-Options": "nosniff",
+			// 		"X-Frame-Options": "DENY",
+			// 		"X-XSS-Protection": "1; mode=block",
+			// 		"Strict-Transport-Security":
+			// 			"max-age=63072000; includeSubDomains; preload",
+			// 		"Referrer-Policy": "no-referrer",
+			// 		"X-Prerender-Mode": "auto",
+			// 	},
+			// },
 		}),
 		react(),
 		tailwindcss(),
