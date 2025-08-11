@@ -11,20 +11,20 @@ const dbUrl =
 // for query purposes
 
 declare global {
-	var dz: PostgresJsDatabase<typeof schema> | undefined;
+	var db: PostgresJsDatabase<typeof schema> | undefined;
 }
 
 if (typeof window === "undefined") {
 	const queryClient = postgres(dbUrl);
 	const db =
-		globalThis.dz ||
+		globalThis.db ||
 		drizzle(queryClient, {
 			logger: process.env.NODE_ENV !== "production",
 			schema,
 		});
-	if (process.env.NODE_ENV !== "production") globalThis.dz = db;
+	globalThis.db = db;
 }
 
-export default globalThis.dz!;
+export default globalThis.db!;
 
 // export { queryClient as dbClient };
