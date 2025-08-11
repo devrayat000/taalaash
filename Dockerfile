@@ -37,7 +37,7 @@ RUN bun install --frozen-lockfile --production
 
 COPY . ./
 
-RUN --mount=type=secret,id=envfile bun run --env-file=/run/secrets/envfile build
+RUN --mount=type=secret,id=envfile bun --env-file=/run/secrets/envfile run build
 
 FROM node:20-alpine AS runner
 
