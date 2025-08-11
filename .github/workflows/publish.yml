@@ -47,7 +47,7 @@ jobs:
           push: true
           target: runner
           secrets: |
-            envfile=${{ secrets.DOTENV_ALL }}
+            envfile=${{ vars.DOTENV_ALL }}
             BUILD_PHASE="1"
           tags: |
             ghcr.io/${{ github.repository }}:latest
