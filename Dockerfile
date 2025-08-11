@@ -41,8 +41,10 @@ COPY . ./
 
 # syntax=docker/dockerfile:1.7
 
+
+
 RUN --mount=type=secret,id=envfile \
-  bun run --env-file=envfile build
+  bun run --env-file=/run/secrets/envfile build
 
 
 
