@@ -1,3 +1,4 @@
+import "dotenv/config";
 // import startupModule from "./server/plugins/startup";
 
 export default defineNitroConfig({
