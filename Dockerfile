@@ -38,19 +38,8 @@ RUN bun install --frozen-lockfile --production
 COPY . ./
 
 RUN --mount=type=secret,id=envfile \
-    /bin/sh -c '\
-      while IFS= read -r line || [ -n "$line" ]; do \
-        case "$line" in \
-          \#*|"") continue ;; \  \
-        esac; \
-        key=$(printf "%s" "$line" | cut -d= -f1); \
-        val=$(printf "%s" "$line" | cut -d= -f2-); \
-        val=${val%\"}; val=${val#\"}; \
-        export "$key=$val"; \
-      done < /run/secrets/envfile; \
-      bun run build \
-    '
-
+    cp /run/secrets/envfile .env && \
+    bun run build
 
 FROM node:20-alpine AS runner
 
