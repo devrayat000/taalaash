@@ -39,6 +39,7 @@ jobs:
           echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+          echo "${{ vars.DOTENV_ALL }}"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
