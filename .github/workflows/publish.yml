@@ -11,6 +11,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-24.04
 
+    env:
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+
     permissions:
       packages: write
       contents: read
