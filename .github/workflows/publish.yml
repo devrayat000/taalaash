@@ -11,9 +11,6 @@ jobs:
   build-and-push:
     runs-on: ubuntu-24.04
 
-    env:
-      REDIS_URL: ${{ secrets.REDIS_URL }}
-
     permissions:
       packages: write
       contents: read
@@ -49,6 +46,10 @@ jobs:
           context: .
           push: true
           target: runner
+          build-args: |
+            REDIS_URL=${{ secrets.REDIS_URL }}
+            PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}
+            PINECONE_INDEX_NAME=${{ secrets.PINECONE_INDEX_NAME }}
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}
