@@ -92,6 +92,7 @@
 		"dotenv": "17.0.0",
 		"drizzle-kit": "^0.31.1",
 		"eslint": "^9.29.0",
+		"nitropack": "2.12.4",
 		"postcss": "^8.5.6",
 		"tailwindcss": "^4.1.10",
 		"ts-node": "^10.9.2"

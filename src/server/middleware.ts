@@ -1,4 +1,5 @@
 import { authClient } from "@/lib/auth-client";
+import { hash } from "node:crypto";
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { getHeaders, setResponseStatus } from "@tanstack/react-start/server";
 
@@ -36,6 +37,7 @@ export const isAdmin = createMiddleware({ type: "function" })
 
 export const getCurrentUser = createServerFn({ method: "GET" }).handler(
 	async ({ signal }) => {
+		// TODO: Implement caching with hashed key
 		const data = await authClient.getSession({
 			fetchOptions: {
 				headers: getHeaders() as HeadersInit,

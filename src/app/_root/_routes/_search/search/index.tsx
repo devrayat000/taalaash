@@ -51,7 +51,7 @@ export const Route = createFileRoute("/_root/_routes/_search/search/")({
 	}),
 	loader: async ({ deps, context }) => {
 		console.log("Loading search results with deps:", deps);
-		context.queryClient.ensureQueryData({
+		context.queryClient.prefetchQuery({
 			queryKey: ["posts", deps],
 			queryFn: () => searchRecords({ data: { ...deps, limit: 12 } }),
 			staleTime: 1000 * 60 * 5, // 5 minutes
