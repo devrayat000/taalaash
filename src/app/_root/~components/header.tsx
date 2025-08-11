@@ -22,6 +22,7 @@ import {
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import UserAvatar from "./user-avatar";
+import AdminBar from "./admin-bar";
 
 const navigationItems = [
 	{ href: "/whats-new", label: "What's New?", icon: StarIcon },
@@ -39,10 +40,10 @@ export default function Header() {
 	return (
 		<header
 			className={cn(
-				"sticky px-10 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-				isAdmin ? "top-8" : "top-0",
+				"sticky px-10 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 top-0",
 			)}
 		>
+			{isAdmin && <AdminBar />}
 			<div className="container flex h-14 max-w-screen-2xl items-center justify-between">
 				{/* Logo and Brand */}
 				<div className="mr-4 hidden md:flex">

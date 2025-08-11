@@ -6,7 +6,6 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 function MainLayout() {
 	return (
 		<div className="min-h-screen bg-background">
-			<AdminBar />
 			<Header />
 			<main className="relative">
 				<Outlet />

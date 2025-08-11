@@ -42,7 +42,7 @@ export default function ChapterFilter({ query, chapters }: ChapterFilterProps) {
 				isMulti
 				value={field.state.value}
 				getOptionValue={(option) => option.value}
-				getOptionLabel={(option) => `${option.value} (${option.count})`}
+				getOptionLabel={(option) => `${option.value}`}
 				onChange={(newValue) =>
 					field.handleChange(newValue as { value: string; count: number }[])
 				}

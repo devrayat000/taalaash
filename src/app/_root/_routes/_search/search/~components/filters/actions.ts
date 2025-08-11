@@ -6,7 +6,7 @@ import { authed } from "@/server/middleware";
 import { array, object, string } from "valibot";
 import db from "@/lib/db";
 import { bookAuthor, chapter, post, subject } from "@/db/schema";
-import { and, count, eq, ilike, inArray } from "drizzle-orm";
+import { and, count, eq, exists, ilike, inArray } from "drizzle-orm";
 
 export const getBooksBySubject = createServerFn({ method: "GET" })
 	// .middleware([authed])
@@ -23,14 +23,22 @@ export const getBooksBySubject = createServerFn({ method: "GET" })
 			.select({
 				id: bookAuthor.id,
 				value: bookAuthor.name,
-				count: count(),
 			})
 			.from(bookAuthor)
-			.innerJoin(subject, eq(bookAuthor.subjectId, subject.id))
-			.innerJoin(chapter, eq(bookAuthor.id, chapter.bookAuthorId))
-			.innerJoin(post, eq(chapter.id, post.chapterId))
-			.where(inArray(subject.name, subjects))
-			.groupBy(bookAuthor.id, bookAuthor.name);
+			// .innerJoin(subject, eq(bookAuthor.subjectId, subject.id))
+			.where(
+				exists(
+					db
+						.select()
+						.from(subject)
+						.where(
+							and(
+								eq(subject.id, bookAuthor.subjectId),
+								inArray(subject.name, subjects),
+							),
+						),
+				),
+			);
 
 		return books;
 	});
@@ -39,26 +47,32 @@ export const getChaptersByBook = createServerFn({ method: "GET" })
 	// .middleware([authed])
 	.validator(
 		object({
-			subjects: array(string()),
 			books: array(string()),
 			query: string(),
 		}),
 	)
-	.handler(async ({ data: { books, subjects, query } }) => {
+	.handler(async ({ data: { books, query } }) => {
 		const chapters = await db
 			.select({
-				id: bookAuthor.id,
-				value: bookAuthor.name,
+				id: chapter.id,
+				value: chapter.name,
 				count: count(),
 			})
-			.from(bookAuthor)
-			.innerJoin(subject, eq(bookAuthor.subjectId, subject.id))
-			.innerJoin(chapter, eq(bookAuthor.id, chapter.bookAuthorId))
-			.innerJoin(post, eq(chapter.id, post.chapterId))
+			.from(chapter)
+			.innerJoin(bookAuthor, eq(bookAuthor.id, chapter.bookAuthorId))
 			.where(
-				and(inArray(subject.name, subjects), inArray(bookAuthor.name, books)),
-			)
-			.groupBy(bookAuthor.id, bookAuthor.name);
+				exists(
+					db
+						.select()
+						.from(bookAuthor)
+						.where(
+							and(
+								eq(bookAuthor.id, chapter.bookAuthorId),
+								inArray(bookAuthor.name, books),
+							),
+						),
+				),
+			);
 
 		return chapters;
 	});

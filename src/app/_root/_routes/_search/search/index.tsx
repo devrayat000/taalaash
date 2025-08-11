@@ -58,10 +58,42 @@ export const Route = createFileRoute("/_root/_routes/_search/search/")({
 		});
 	},
 	notFoundComponent: SearchNotFound,
+	wrapInSuspense: true,
+	errorComponent: () => <div>Bla bla</div>,
 });
 
 function SearchNotFound() {
-	return <div>No results found, gg</div>;
+	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
+
+	return (
+		<div className="container mx-auto px-4 py-4 max-w-7xl">
+			{/* Mobile Search Form and Filter Button */}
+			<div className="flex flex-col lg:hidden items-stretch gap-3 mb-4">
+				<SearchForm />
+
+				<div className="flex items-center justify-between">
+					<div className="text-sm text-muted-foreground">
+						No results found for "{searchParams.query}"
+					</div>
+				</div>
+			</div>
+
+			<div className="hidden lg:block mb-6">
+				<SearchForm />
+			</div>
+
+			<section className="flex gap-6">
+				{/* Main Content */}
+				<main className="flex-1 min-w-0">
+					<div className="hidden lg:block mb-4">
+						<div className="text-sm text-muted-foreground">
+							No results found for "{searchParams.query}"
+						</div>
+					</div>
+				</main>
+			</section>
+		</div>
+	);
 }
 
 function SearchLoader() {

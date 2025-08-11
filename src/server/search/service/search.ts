@@ -17,6 +17,12 @@ import {
 import { searchSchema } from "@/app/_root/_routes/_search/search/~components/searchSchema";
 
 const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
+	throw notFound({
+		data: {
+			message: "No posts found in the vector database.",
+		},
+		routeId: "/_root/_routes/_search/search/",
+	});
 	const searchWithText = await pineconeIndex.searchRecords({
 		query: {
 			topK: data.limit * 3,
@@ -35,11 +41,12 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 		},
 	});
 	console.log("Search results:", searchWithText.result.hits);
-	if (!searchWithText.result.hits.length) {
+	if (!false) {
 		throw notFound({
 			data: {
 				message: "No posts found in the vector database.",
 			},
+			routeId: "/_root/_routes/_search/search/",
 		});
 	}
 
@@ -59,6 +66,7 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 			data: {
 				message: "No posts found in the database.",
 			},
+			routeId: "/_root/_routes/_search/search/",
 		});
 	}
 
