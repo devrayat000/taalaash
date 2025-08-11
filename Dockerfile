@@ -41,16 +41,16 @@ RUN --mount=type=secret,id=envfile \
     /bin/sh -c '\
       while IFS= read -r line || [ -n "$line" ]; do \
         case "$line" in \
-          \#*|"") continue ;; \  # skip comments and blank lines
+          \#*|"") continue ;; \  \
         esac; \
         key=$(printf "%s" "$line" | cut -d= -f1); \
         val=$(printf "%s" "$line" | cut -d= -f2-); \
-        # remove optional surrounding quotes
         val=${val%\"}; val=${val#\"}; \
         export "$key=$val"; \
       done < /run/secrets/envfile; \
       bun run build \
     '
+
 
 FROM node:20-alpine AS runner
 
