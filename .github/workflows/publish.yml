@@ -46,16 +46,17 @@ jobs:
           context: .
           push: true
           target: runner
-          build-args: |
+          secrets: |
             REDIS_URL=${{ secrets.REDIS_URL }}
             PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}
             PINECONE_INDEX_NAME=${{ secrets.PINECONE_INDEX_NAME }}
+            BUILD_PHASE="1"
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.PACKAGE_VERSION }}
             ghcr.io/${{ github.repository }}:${{ env.SHORT_SHA }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
 
   trigger-deploy:
     runs-on: ubuntu-24.04

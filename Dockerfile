@@ -37,7 +37,13 @@ RUN bun install --frozen-lockfile --production
 
 COPY . ./
 
-RUN bun run build
+RUN RUN --mount=type=secret,id=REDIS_URL \
+    --mount=type=secret,id=PINECONE_API_KEY \
+    --mount=type=secret,id=PINECONE_INDEX_NAME \
+    export REDIS_URL=$(cat /run/secrets/REDIS_URL) && \
+    export PINECONE_API_KEY=$(cat /run/secrets/PINECONE_API_KEY) && \
+    export PINECONE_INDEX_NAME=$(cat /run/secrets/PINECONE_INDEX_NAME) && \
+    bun run build
 
 FROM node:20-alpine AS runner
 
