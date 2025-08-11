@@ -39,7 +39,7 @@ COPY . ./
 
 RUN --mount=type=secret,id=envfile \
     cp /run/secrets/envfile .env && \
-    bun run build
+    bun run --env-file=.env build
 
 FROM node:20-alpine AS runner
 
