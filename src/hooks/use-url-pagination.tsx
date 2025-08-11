@@ -1,7 +1,7 @@
 import { searchParamsSchema } from "@/lib/schemas";
 import { useLocation, useSearch, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { z } from "zod";
+import { z } from "zod/mini";
 
 export default function useUrlPagination() {
 	const searchParams = useSearch({
@@ -18,12 +18,12 @@ export default function useUrlPagination() {
 	const setPage = useCallback(
 		(page: number) => {
 			const newParams = {
-				...searchParams,
+				...states,
 				page: page.toString(),
 			};
 			navigate({ search: newParams });
 		},
-		[navigate, searchParams],
+		[navigate, states],
 	);
 
 	const setLimit = useCallback(

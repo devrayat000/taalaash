@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 import { pineconeIndex } from "@/lib/pinecone";
 import { getPostByIdForIndexing } from "@/server/post/service/get";
 

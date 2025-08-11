@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 import { Suspense, useState } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
 import { FileImageIcon, Paperclip } from "lucide-react";
@@ -31,11 +31,14 @@ import { getSubjectsFn } from "@/server/subject/function";
 import { bulkUploadWithOCRFn } from "@/server/post/function/indexing";
 
 const postFormSchema = z.object({
-	subjectId: z.string().min(1),
-	bookAuthorId: z.string().min(1),
-	chapterId: z.string().min(1),
-	files: z.file().array(),
-	pages: z.string().transform((val) => parsePageRange(val)),
+	subjectId: z.string().check(z.minLength(1)),
+	bookAuthorId: z.string().check(z.minLength(1)),
+	chapterId: z.string().check(z.minLength(1)),
+	files: z.array(z.file()),
+	pages: z.pipe(
+		z.string(),
+		z.transform((val) => parsePageRange(val)),
+	),
 });
 
 function parsePageRange(input: string): number[] {

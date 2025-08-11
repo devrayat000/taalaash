@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 import db from "@/lib/db";
 import { institutionalInfo } from "@/db/schema";
 

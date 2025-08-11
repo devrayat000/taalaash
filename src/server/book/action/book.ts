@@ -4,30 +4,30 @@ import { eq, inArray } from "drizzle-orm";
 import { bookAuthor } from "@/db/schema";
 import db from "@/lib/db";
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
+import { z } from "zod/mini";
 
 const createBookSchema = z.object({
 	name: z.string(),
 	subjectId: z.string(),
 	edition: z.string(),
-	marked: z.boolean().default(false),
-	coverUrl: z.string().optional(),
+	marked: z._default(z.boolean(), false),
+	coverUrl: z.optional(z.string()),
 });
 
 const updateBookSchema = z.object({
 	id: z.string(),
 	params: z.object({
-		name: z.string().optional(),
-		subjectId: z.string().optional(),
-		edition: z.string().optional(),
-		marked: z.boolean().optional(),
-		coverUrl: z.string().optional(),
+		name: z.optional(z.string()),
+		subjectId: z.optional(z.string()),
+		edition: z.optional(z.string()),
+		marked: z.optional(z.boolean()),
+		coverUrl: z.optional(z.string()),
 	}),
 });
 
 export const createBook = createServerFn({ method: "POST" })
 	.validator(createBookSchema)
-	.handler(async ({ data: { data: input } }) => {
+	.handler(async ({ data: input }) => {
 		const [data] = await db
 			.insert(bookAuthor)
 			.values(input)

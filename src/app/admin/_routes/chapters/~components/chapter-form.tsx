@@ -1,4 +1,4 @@
-import * as z from "zod";
+import { z } from "zod/mini";
 import { useState } from "react";
 import { Trash } from "lucide-react";
 import type { InferSelectModel } from "drizzle-orm";
@@ -30,9 +30,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ChapterTable } from "@/server/chapter/service";
 
 const formSchema = z.object({
-	name: z.string().min(1),
-	subjectId: z.string().min(1),
-	bookAuthorId: z.string().min(1),
+	name: z.string().check(z.minLength(1)),
+	subjectId: z.string().check(z.minLength(1)),
+	bookAuthorId: z.string().check(z.minLength(1)),
 });
 
 type Subject = InferSelectModel<typeof subject>;

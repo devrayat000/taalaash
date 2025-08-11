@@ -1,8 +1,9 @@
-import Navbar from "@/draft/admin/_routes/~components/navbar";
+
 import { Outlet } from "@tanstack/react-router";
 // import { ThemeProvider } from "@/providers/theme-provider";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Fragment } from "react";
+import Navbar from "./~components/navbar";
 
 function DashboardLayout() {
 	return (
