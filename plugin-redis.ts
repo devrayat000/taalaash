@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { defineNitroPlugin } from "nitropack/runtime";
 import redis from "./src/lib/redis";
 
