@@ -42,29 +42,7 @@ COPY . ./
 # syntax=docker/dockerfile:1.7
 
 RUN --mount=type=secret,id=envfile \
-    /bin/sh -c '\
-      echo "===== RAW ENVFILE ====="; \
-      cat /run/secrets/envfile; \
-      echo "===== STRIPPED COMMENTS/BLANKS ====="; \
-      grep -v "^\s*#" /run/secrets/envfile | sed "/^\s*$/d"; \
-      echo "===== PARSING & EXPORTING ====="; \
-      while IFS= read -r line || [ -n "$line" ]; do \
-        case "$line" in \
-          \#*|"") \
-            echo "Skipping line: $line"; \
-            continue ;; \
-        esac; \
-        key=$(printf "%s" "$line" | cut -d= -f1); \
-        val=$(printf "%s" "$line" | cut -d= -f2-); \
-        val=${val%\"}; val=${val#\"}; \
-        echo "Exporting: $key=$val"; \
-        export "$key=$val"; \
-      done < /run/secrets/envfile; \
-      echo "===== ENV VARS AVAILABLE NOW ====="; \
-      env; \
-      echo "===== RUNNING BUILD ====="; \
-      bun run build \
-    '
+  bun run --env-file=envfile build
 
 
 
