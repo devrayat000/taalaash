@@ -31,7 +31,7 @@ export default function FilterSheet({
 				</Button>
 			</SheetTrigger>
 			<SheetContent className="lg:hidden">
-				<form>
+				<div className="space-y-4">
 					<SheetHeader>
 						<SheetTitle>Filter</SheetTitle>
 					</SheetHeader>
@@ -50,7 +50,7 @@ export default function FilterSheet({
 							<Button type="submit">Save changes</Button>
 						</SheetClose>
 					</SheetFooter>
-				</form>
+				</div>
 			</SheetContent>
 		</Sheet>
 	);

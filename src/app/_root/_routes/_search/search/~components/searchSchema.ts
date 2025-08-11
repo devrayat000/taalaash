@@ -1,9 +1,9 @@
 import { z } from "zod/mini";
 
-const filterSchema = z._default(
+export const filterSchema = z._default(
 	z.pipe(
 		z.union([z.string(), z.array(z.string())]),
-		z.transform((val) => (Array.isArray(val) ? val : [val])),
+		z.transform((val) => (Array.isArray(val) ? val : [val]).filter(Boolean)),
 	),
 	[],
 );
@@ -36,6 +36,7 @@ export const searchSchema = z.object({
 	subjects: filterSchema,
 	chapters: filterSchema,
 	books: filterSchema,
+	limit: z._default(z.optional(z.int().check(z.positive())), 12),
 });
 
 export type SearchSchema = z.infer<typeof searchSchema>;

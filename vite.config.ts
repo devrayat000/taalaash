@@ -16,6 +16,7 @@ export default defineConfig({
 				routesDirectory: "src/app", // Defaults to "src/routes"
 			},
 			customViteReactPlugin: true,
+			sitemap: { enabled: true, host: "https://taalaash.com" },
 			pages: [
 				{
 					path: "/",

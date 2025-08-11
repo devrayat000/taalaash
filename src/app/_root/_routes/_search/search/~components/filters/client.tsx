@@ -2,10 +2,10 @@ import SubjectFilter from "./subjects";
 // import { Form } from "@/components/ui/form";
 import BookFilter from "./books";
 import ChapterFilter from "./chapters";
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
 import { Fragment, useEffect } from "react";
-import { useAppForm, formContext } from "./form";
+import { useAppForm, formContext, useFormContext } from "./form";
 import { useQueryClient } from "@tanstack/react-query";
 import { getBooksBySubject } from "./actions";
 
@@ -21,22 +21,8 @@ export interface FilterClientProps {
 
 export default function FilterClient({ initialData }: FilterClientProps) {
 	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
-	const form = useAppForm({
-		defaultValues: {
-			subjects:
-				initialData?.subjects?.filter((s) =>
-					searchParams.subject?.includes(s.value),
-				) || [],
-			books:
-				initialData?.books?.filter((s) =>
-					searchParams.books?.includes(s.value),
-				) || [],
-			chapters:
-				initialData?.chapters?.filter((s) =>
-					searchParams.chapters?.includes(s.value),
-				) || [],
-		},
-	});
+	const navigate = useNavigate();
+	const form = useFormContext();
 
 	const queryClient = useQueryClient();
 
@@ -63,7 +49,7 @@ export default function FilterClient({ initialData }: FilterClientProps) {
 	}, [form.store.subscribe, queryClient.setQueryData, searchParams.query]);
 
 	return (
-		<form.AppForm>
+		<Fragment>
 			<form.AppField name="subjects">
 				{() => <SubjectFilter subjects={initialData?.subjects ?? []} />}
 			</form.AppField>
@@ -83,6 +69,6 @@ export default function FilterClient({ initialData }: FilterClientProps) {
 					/>
 				)}
 			</form.AppField>
-		</form.AppForm>
+		</Fragment>
 	);
 }

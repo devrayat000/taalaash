@@ -9,9 +9,9 @@ import { searchRecords } from "@/server/search/service";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 export default function SearchResults() {
-	const { query, page } = useSearch({ from: "/_root/_routes/_search/search/" });
+	const search = useSearch({ from: "/_root/_routes/_search/search/" });
 	const { data } = useSuspenseQuery({
-		queryKey: ["posts", { query, page }] as const,
+		queryKey: ["posts", search] as const,
 		queryFn: ({ queryKey: [, params] }) =>
 			searchRecords({ data: { ...params, limit: 12 } }),
 		staleTime: 1000 * 60 * 5, // 5 minutes
@@ -32,10 +32,10 @@ export default function SearchResults() {
 					</div>
 				)}
 			</section>
-			<PostPagination
+			{/* <PostPagination
 				currentPage={count % 12}
 				totalPages={Math.ceil(count / 12)}
-			/>
+			/> */}
 		</div>
 	);
 }

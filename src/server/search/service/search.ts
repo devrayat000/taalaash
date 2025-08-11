@@ -14,16 +14,7 @@ import {
 	type infer as Infer,
 	positive,
 } from "zod/mini";
-
-const searchSchema = object({
-	query: string().check(
-		minLength(1, "Query must be at least 1 character long"),
-	),
-	subject: optional(array(string())),
-	chapter: optional(array(string())),
-	book: optional(array(string())),
-	limit: _default(optional(int().check(positive())), 12),
-});
+import { searchSchema } from "@/app/_root/_routes/_search/search/~components/searchSchema";
 
 const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 	const searchWithText = await pineconeIndex.searchRecords({
@@ -31,9 +22,9 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 			topK: data.limit * 3,
 			inputs: { text: data.query },
 			filter: {
-				subject: data.subject ? { $in: data.subject } : undefined,
-				chapter: data.chapter ? { $in: data.chapter } : undefined,
-				book: data.book ? { $in: data.book } : undefined,
+				subject: !!data.subjects?.length ? { $in: data.subjects } : undefined,
+				chapter: !!data.chapters?.length ? { $in: data.chapters } : undefined,
+				book: !!data.books?.length ? { $in: data.books } : undefined,
 			},
 		},
 		fields: ["id"],
@@ -47,7 +38,7 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 	if (!searchWithText.result.hits.length) {
 		throw notFound({
 			data: {
-				message: "No posts found for the given query.",
+				message: "No posts found in the vector database.",
 			},
 		});
 	}
@@ -66,7 +57,7 @@ const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
 	if (!postsByIds.length) {
 		throw notFound({
 			data: {
-				message: "No posts found for the given query.",
+				message: "No posts found in the database.",
 			},
 		});
 	}

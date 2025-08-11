@@ -1,3 +1,5 @@
+// import startupModule from "./server/plugins/startup";
+
 export default defineNitroConfig({
 	minify: true,
 	externals: {

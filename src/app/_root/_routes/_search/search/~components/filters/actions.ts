@@ -58,7 +58,7 @@ export const getChaptersByBook = createServerFn({ method: "GET" })
 			.where(
 				and(inArray(subject.name, subjects), inArray(bookAuthor.name, books)),
 			)
-			.groupBy(chapter.id, chapter.name);
+			.groupBy(bookAuthor.id, bookAuthor.name);
 
 		return chapters;
 	});

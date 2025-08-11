@@ -1,4 +1,3 @@
-import React from "react";
 import FilterClient, { FilterClientProps } from "./client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ export default function FilterSidebar({
 	initialData: FilterClientProps["initialData"];
 }) {
 	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
+
 	return (
 		<Card className="w-full">
 			<CardHeader>
@@ -20,7 +20,7 @@ export default function FilterSidebar({
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<form className="space-y-4">
+				<div className="space-y-4">
 					<input type="hidden" name="query" value={searchParams.query} />
 					{searchParams?.page && (
 						<input type="hidden" name="page" value={searchParams?.page} />
@@ -36,7 +36,7 @@ export default function FilterSidebar({
 					>
 						Apply Filters
 					</Button>
-				</form>
+				</div>
 			</CardContent>
 		</Card>
 	);

@@ -21,16 +21,17 @@ import searchinglg from "@/assets/animation/searching.json";
 import searchingsm from "@/assets/animation/search_imm.json";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { cn } from "@/lib/utils";
+import { filterSchema } from "./~components/searchSchema";
 
 export const Route = createFileRoute("/_root/_routes/_search/search/")({
 	component: SearchPage,
 	validateSearch: object({
 		query: string(),
 		page: _default(optional(int()), 1),
-		subject: optional(array(string())),
-		edition: optional(array(string())),
-		books: optional(array(string())),
-		chapters: optional(array(string())),
+		subjects: filterSchema,
+		editions: filterSchema,
+		books: filterSchema,
+		chapters: filterSchema,
 	}),
 	beforeLoad({ search }) {
 		if (!search.query.trim()) {
@@ -41,7 +42,13 @@ export const Route = createFileRoute("/_root/_routes/_search/search/")({
 			});
 		}
 	},
-	loaderDeps: ({ search: { query, page } }) => ({ query, page }),
+	loaderDeps: ({ search: { query, page, subjects, books, chapters } }) => ({
+		query,
+		page,
+		subjects,
+		books,
+		chapters,
+	}),
 	loader: async ({ deps, context }) => {
 		console.log("Loading search results with deps:", deps);
 		context.queryClient.ensureQueryData({
