@@ -9,6 +9,10 @@ const redis = createClient({
 redis.on("error", (err) => console.error("Redis Client Error", err));
 redis.on("connect", () => console.log("Redis Client Connected"));
 
+redis.on("end", () => {
+	console.warn("[redis] connection ended; marking client closed");
+});
+
 // if (process.env.DEV) {
 // 	await redis.connect();
 // }
