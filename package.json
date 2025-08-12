@@ -84,6 +84,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.6",
+		"@types/bun": "1.2.20",
 		"@types/lodash": "^4.17.18",
 		"@types/node": "^24.0.3",
 		"@types/react": "^19.1.8",
