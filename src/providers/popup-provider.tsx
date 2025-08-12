@@ -94,52 +94,88 @@ const HighlightedImage = ({
 						},
 					},
 					signal,
+				}).catch(console.log);
+				// const response = await consumeHighlightFn({
+				// 	data: { taskId },
+				// 	signal: AbortSignal.timeout(45000),
+				// });
+
+				const url = new URL(consumeHighlightFn.url, window.origin);
+				url.searchParams.append(
+					"payload",
+					JSON.stringify({
+						data: { taskId },
+						context: {},
+					}),
+				);
+				url.searchParams.append("createServerFn", "");
+				url.searchParams.append("raw", "");
+
+				const source = new EventSource(url, {
+					withCredentials: true,
 				});
-				const response = await consumeHighlightFn({
-					data: { taskId },
-					signal: AbortSignal.timeout(45000),
-				});
 
-				if (!response.ok) {
-					throw new Error("Failed to fetch highlights");
-				}
-
-				const reader = response.body?.getReader();
-
-				if (!reader) {
-					throw new Error("Failed to read response body");
-				}
-
-				const decoder = new TextDecoder();
-
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-
-					const chunk = decoder.decode(value);
-					console.log({ chunk });
-
-					try {
-						const data = JSON.parse(chunk.replace(/data:\s/, "").trim());
-
-						if (data.status === "completed") {
-							if (data.data?.error) {
-								setError(data.data.error);
-							} else {
-								setHighlights(data.data?.highlights || []);
-								setPopupHighlights(data.data?.highlights || []);
-							}
-							setIsLoading(false);
-							reader.cancel();
-						} else if (data.status === "pending") {
+				source.addEventListener("message", (event) => {
+					const data = JSON.parse(event.data);
+					if (data.status === "completed") {
+						if (data.data?.error) {
+							setError(data.data.error);
+						} else {
+							setHighlights(data.data?.highlights || []);
+							setPopupHighlights(data.data?.highlights || []);
 						}
-					} catch (parseError) {
-						setError("Failed to parse highlight response");
 						setIsLoading(false);
-						reader.cancel();
-						console.error("Failed to parse highlight response:", parseError);
+						source.close();
 					}
-				}
+				});
+
+				source.addEventListener("error", (event) => {
+					console.error("EventSource error:", event);
+					setError("Failed to fetch highlights");
+					setIsLoading(false);
+					source.close();
+				});
+
+				// if (!response.ok) {
+				// 	throw new Error("Failed to fetch highlights");
+				// }
+
+				// const reader = response.body?.getReader();
+
+				// if (!reader) {
+				// 	throw new Error("Failed to read response body");
+				// }
+
+				// const decoder = new TextDecoder();
+
+				// while (true) {
+				// 	const { done, value } = await reader.read();
+				// 	if (done) break;
+
+				// 	const chunk = decoder.decode(value);
+				// 	console.log({ chunk });
+
+				// 	try {
+				// 		const data = JSON.parse(chunk.replace(/data:\s/, "").trim());
+
+				// 		if (data.status === "completed") {
+				// 			if (data.data?.error) {
+				// 				setError(data.data.error);
+				// 			} else {
+				// 				setHighlights(data.data?.highlights || []);
+				// 				setPopupHighlights(data.data?.highlights || []);
+				// 			}
+				// 			setIsLoading(false);
+				// 			reader.cancel();
+				// 		} else if (data.status === "pending") {
+				// 		}
+				// 	} catch (parseError) {
+				// 		setError("Failed to parse highlight response");
+				// 		setIsLoading(false);
+				// 		reader.cancel();
+				// 		console.error("Failed to parse highlight response:", parseError);
+				// 	}
+				// }
 			} catch (error) {
 				console.error("Failed to request highlights:", error);
 				setError(
