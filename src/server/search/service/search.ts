@@ -1,4 +1,4 @@
-import { pineconeIndex } from "@/lib/pinecone";
+import { denseIndex } from "@/lib/pinecone";
 import { authed } from "@/server/middleware";
 import { getPosts } from "@/server/post/service/get";
 import { createServerFn, serverOnly } from "@tanstack/react-start";
@@ -7,7 +7,7 @@ import type { infer as Infer } from "zod/mini";
 import { searchSchema } from "@/app/_root/_routes/_search/search/~components/searchSchema";
 
 const search = serverOnly(async (data: Infer<typeof searchSchema>) => {
-	const searchWithText = await pineconeIndex.searchRecords({
+	const searchWithText = await denseIndex.searchRecords({
 		query: {
 			topK: data.limit * 3,
 			inputs: { text: data.query },

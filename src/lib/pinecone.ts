@@ -6,7 +6,8 @@ import {
 
 declare global {
 	var pc: Pinecone | undefined;
-	var pci: Index<RecordMetadata> | undefined;
+	var pcdi: Index<RecordMetadata> | undefined;
+	var pcsi: Index<RecordMetadata> | undefined;
 }
 
 const pinecone =
@@ -16,13 +17,18 @@ const pinecone =
 		// fetchApi: fetchWithEvent,
 	});
 
-const pineconeIndex =
-	globalThis.pci ??
-	pinecone.Index(process.env.PINECONE_INDEX_NAME || "taalaash");
+const denseIndex =
+	globalThis.pcdi ??
+	pinecone.Index(process.env.PINECONE_DENSE_INDEX_NAME || "taalaash");
+
+const sparseIndex =
+	globalThis.pcsi ??
+	pinecone.Index(process.env.PINECONE_SPARSE_INDEX_NAME || "taalaash");
 
 if (process.env.NODE_ENV !== "production") {
 	globalThis.pc = pinecone;
-	globalThis.pci = pineconeIndex;
+	globalThis.pcdi = denseIndex;
+	globalThis.pcsi = sparseIndex;
 }
 
-export { pinecone, pineconeIndex };
+export { pinecone, denseIndex, sparseIndex };

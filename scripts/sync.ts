@@ -1,5 +1,5 @@
 import db from "../src/lib/db";
-import { pineconeIndex } from "../src/lib/pinecone";
+import { denseIndex } from "../src/lib/pinecone";
 
 async function getSeparateIds() {
 	const dbRecords = await db.query.post.findMany({
@@ -12,7 +12,7 @@ async function getSeparateIds() {
 	const pineconeIds: string[][] = [];
 
 	do {
-		const indexRecords = await pineconeIndex.listPaginated({
+		const indexRecords = await denseIndex.listPaginated({
 			limit: 100,
 			paginationToken: next,
 		});
@@ -46,7 +46,7 @@ async function sync() {
 
 	// Delete IDs that are not in the DB but are in Pinecone
 	if (dbOnlyIds.length > 0) {
-		await pineconeIndex.deleteMany(separateIds);
+		await denseIndex.deleteMany(separateIds);
 	}
 
 	// // Add the dbOnly IDs to Pinecone
@@ -59,7 +59,7 @@ async function sync() {
 	//         subject: "",
 	//         edition: "",
 	//     }));
-	//     await pineconeIndex.upsertRecords(docs);
+	//     await denseIndex.upsertRecords(docs);
 	// }
 }
 

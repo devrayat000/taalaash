@@ -1,6 +1,6 @@
 import { bookAuthor, chapter, subject } from "@/db/topic";
 import db from "@/lib/db";
-import { pineconeIndex } from "@/lib/pinecone";
+import { denseIndex } from "@/lib/pinecone";
 import { eq } from "drizzle-orm";
 import {
 	object,
@@ -100,9 +100,9 @@ export const indexDocuments = async ({
 	}));
 
 	// Index in Pinecone (if configured)
-	if (pineconeIndex) {
+	if (denseIndex) {
 		try {
-			await pineconeIndex.upsertRecords(docs);
+			await denseIndex.upsertRecords(docs);
 			console.log(`Indexed ${docs.length} documents in Pinecone`);
 		} catch (error) {
 			console.error("Failed to index in Pinecone:", error);
