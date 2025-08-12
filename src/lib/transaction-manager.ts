@@ -1,6 +1,6 @@
 import { s3Client, s3BucketName } from "@/lib/s3";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { pineconeIndex } from "@/lib/pinecone";
+import { denseIndex, sparseIndex } from "@/lib/pinecone";
 import db from "@/lib/db";
 import { eq, inArray } from "drizzle-orm";
 import { post } from "@/db/topic";
@@ -150,7 +150,8 @@ export function createPineconeIndexStep(
 		data: { documentIds },
 		rollback: async () => {
 			if (documentIds.length > 0) {
-				await pineconeIndex.deleteMany(documentIds);
+				await denseIndex.deleteMany(documentIds);
+				await sparseIndex.deleteMany(documentIds);
 				console.log(`Deleted ${documentIds.length} documents from Pinecone`);
 			}
 		},
