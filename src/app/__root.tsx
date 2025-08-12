@@ -10,26 +10,15 @@ declare global {
 import { ToastProvider } from "@/providers/toast-provider";
 import {
 	Outlet,
-	createRootRoute,
 	HeadContent,
 	Scripts,
 	createRootRouteWithContext,
 } from "@tanstack/react-router";
-import logo from "@/assets/logo_sq.png?url";
 
 import appCss from "./globals.css?url";
-import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 import Loading from "./~loading";
-import {
-	dehydrate,
-	HydrationBoundary,
-	QueryClient,
-	QueryClientProvider,
-} from "@tanstack/react-query";
-import { queryClient } from "@/lib/query-client";
-import { Context } from "@/router";
-import { authClient } from "@/lib/auth-client";
+import type { Context } from "@/router";
 import { getCurrentUser } from "@/server/middleware";
 import { Toaster } from "@/components/ui/sonner";
 import { seo } from "@/lib/seo";
@@ -143,20 +132,13 @@ export const Route = createRootRouteWithContext<Context>()({
 		}
 		return {
 			user: data?.user,
-			isAuthenticated: true,
-		};
-	},
-	loader() {
-		return {
-			dehydratedState: dehydrate(queryClient),
+			isAuthenticated: !!data?.user,
 		};
 	},
 	wrapInSuspense: true,
 });
 
 function RootLayout() {
-	const { dehydratedState } = Route.useLoaderData();
-
 	return (
 		<html lang="en">
 			<head>
@@ -171,13 +153,9 @@ function RootLayout() {
 			// className={cn(inter.variable, tiroBangla.variable)}
 			>
 				<ToastProvider />
-				<QueryClientProvider client={queryClient}>
-					<HydrationBoundary state={dehydratedState}>
-						<Suspense fallback={<Loading />}>
-							<Outlet />
-						</Suspense>
-					</HydrationBoundary>
-				</QueryClientProvider>
+				<Suspense fallback={<Loading />}>
+					<Outlet />
+				</Suspense>
 				<Toaster />
 				<Scripts />
 			</body>

@@ -107,6 +107,7 @@ import { reactStartCookies } from "better-auth/react-start";
 import { admin } from "better-auth/plugins";
 import db from "./db";
 import * as schema from "@/db/schema";
+import redis from "./redis";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -135,6 +136,11 @@ export const auth = betterAuth({
 			enabled: true,
 			maxAge: 60 * 60,
 		},
+	},
+	secondaryStorage: {
+		get: (key) => redis.get(key),
+		set: (key, value, ttl) => redis.set(key, value, { EX: ttl }),
+		delete: (key) => void redis.del(key),
 	},
 	//... the rest of your config
 });

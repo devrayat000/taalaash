@@ -1,24 +1,11 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
-import {
-	array,
-	int,
-	number,
-	object,
-	optional,
-	pipe,
-	string,
-	_default,
-} from "zod/v4-mini";
-import { Fragment, Suspense } from "react";
+import { createFileRoute, redirect, useSearch } from "@tanstack/react-router";
+import { array, int, object, optional, string, _default } from "zod/mini";
+import { Suspense } from "react";
 
 import SearchForm from "./~components/search-form";
 import SearchResults from "./~components/search-results";
-import { ResultSkeleton } from "./~components/result-card";
 import Filters from "./~components/filters";
-import { SearchSchema } from "./~components/searchSchema";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getRequestURL } from "@tanstack/react-start/server";
-import { getPosts } from "@/server/post/service";
 import { searchRecords } from "@/server/search/service";
 import { SlidersHorizontal } from "lucide-react";
 import Lottie from "lottie-react";
@@ -34,27 +21,80 @@ import searchinglg from "@/assets/animation/searching.json";
 import searchingsm from "@/assets/animation/search_imm.json";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { cn } from "@/lib/utils";
+import { filterSchema } from "./~components/searchSchema";
 
 export const Route = createFileRoute("/_root/_routes/_search/search/")({
 	component: SearchPage,
 	validateSearch: object({
 		query: string(),
 		page: _default(optional(int()), 1),
-		subject: optional(array(string())),
-		edition: optional(array(string())),
-		books: optional(array(string())),
-		chapters: optional(array(string())),
+		subjects: filterSchema,
+		editions: filterSchema,
+		books: filterSchema,
+		chapters: filterSchema,
 	}),
-	loaderDeps: ({ search: { query, page } }) => ({ query, page }),
+	beforeLoad({ search }) {
+		if (!search.query.trim()) {
+			throw redirect({
+				to: "/",
+				reloadDocument: true,
+				replace: true,
+			});
+		}
+	},
+	loaderDeps: ({ search: { query, page, subjects, books, chapters } }) => ({
+		query,
+		page,
+		subjects,
+		books,
+		chapters,
+	}),
 	loader: async ({ deps, context }) => {
 		console.log("Loading search results with deps:", deps);
-		context.queryClient.ensureQueryData({
+		context.queryClient.prefetchQuery({
 			queryKey: ["posts", deps],
 			queryFn: () => searchRecords({ data: { ...deps, limit: 12 } }),
 			staleTime: 1000 * 60 * 5, // 5 minutes
 		});
 	},
+	notFoundComponent: SearchNotFound,
+	wrapInSuspense: true,
+	errorComponent: () => <div>Bla bla</div>,
 });
+
+function SearchNotFound() {
+	const searchParams = useSearch({ from: "/_root/_routes/_search/search/" });
+
+	return (
+		<div className="container mx-auto px-4 py-4 max-w-7xl">
+			{/* Mobile Search Form and Filter Button */}
+			<div className="flex flex-col lg:hidden items-stretch gap-3 mb-4">
+				<SearchForm />
+
+				<div className="flex items-center justify-between">
+					<div className="text-sm text-muted-foreground">
+						No results found for "{searchParams.query}"
+					</div>
+				</div>
+			</div>
+
+			<div className="hidden lg:block mb-6">
+				<SearchForm />
+			</div>
+
+			<section className="flex gap-6">
+				{/* Main Content */}
+				<main className="flex-1 min-w-0">
+					<div className="hidden lg:block mb-4">
+						<div className="text-sm text-muted-foreground">
+							No results found for "{searchParams.query}"
+						</div>
+					</div>
+				</main>
+			</section>
+		</div>
+	);
+}
 
 function SearchLoader() {
 	const { width } = useWindowSize();

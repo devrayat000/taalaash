@@ -14,10 +14,10 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AlertModal } from "@/components/modals/alert-modal";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import type { ChapterColumn } from "./columns";
-import { deleteChapter } from "@/server/chapter/action/chapter";
+import { deleteChapterFn } from "@/server/chapter/function";
 
 interface CellActionProps {
 	data: ChapterColumn;
@@ -29,18 +29,16 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 	const [open, setOpen] = useState(false);
 
 	const deleteMutation = useMutation({
-		mutationFn: () => deleteChapter({ data: { id: data.id } }),
+		mutationFn: () => deleteChapterFn({ data: { id: data.id } }),
 		onSuccess: () => {
-			toast({ description: "Chapter deleted." });
+			toast.success("Chapter deleted.");
 			queryClient.invalidateQueries({ queryKey: ["chapters"] });
 			setOpen(false);
 		},
 		onError: () => {
-			toast({
-				description:
-					"Make sure you removed all products using this chapter first.",
-				variant: "destructive",
-			});
+			toast.error(
+				"Make sure you removed all products using this chapter first.",
+			);
 		},
 	});
 
@@ -49,8 +47,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 	};
 
 	const onCopy = (id: string) => {
-		navigator.clipboard.writeText(id);
-		toast({ description: "Chapter ID copied to clipboard." });
+		toast.promise(navigator.clipboard.writeText(id), {
+			success: "Chapter ID copied to clipboard.",
+		});
 	};
 
 	return (

@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 // import { ApiList } from "@/components/ui/api-list";
 
 import { columns } from "./columns";
-import { deleteManyPosts } from "@/server/post/action";
+import { deleteManyPostsFn } from "@/server/post/function";
 import { useServerTableStore } from "@/providers/server-table-provider";
 import { Link, useSearch } from "@tanstack/react-router";
 
@@ -35,7 +35,7 @@ export const PostsClient: React.FC = () => {
 				key={searchParams.toString()}
 				searchKey="text"
 				columns={columns}
-				deleteAction={deleteManyPosts}
+				deleteAction={deleteManyPostsFn}
 			/>
 			{/* <Heading title="API" description="API Calls for Posts" />
       <Separator /> */}

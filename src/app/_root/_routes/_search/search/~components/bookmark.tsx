@@ -1,16 +1,20 @@
 "use client";
 
-import { toggleBookmark } from "@/server/bookmark/action/bookmark";
+import { toggleBookmarkFn } from "@/server/bookmark/function/create";
 import { useServerStore } from "@/hooks/use-server-data";
 import { Bookmark, BookmarkCheck } from "lucide-react";
-import { useCallback, useOptimistic } from "react";
-import { useFormState } from "react-dom";
+import { useCallback, useOptimistic, useTransition } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export interface BookmarkButtonProps {
 	postId: string;
 }
 
 export default function BookmarkButton({ postId }: BookmarkButtonProps) {
+	const [isPending, startTransition] = useTransition();
+	const queryClient = useQueryClient();
+
 	const bookmarked = useServerStore(
 		useCallback(
 			(state) => state.bookmarks.some((bm) => bm.postId === postId),
@@ -19,16 +23,45 @@ export default function BookmarkButton({ postId }: BookmarkButtonProps) {
 	);
 	const toggleStoreBookmark = useServerStore((state) => state.toggleBookmark);
 
-	const [isBookmarked, toggle] = useFormState(toggleBookmark, bookmarked);
 	const [isOptimisticBookmarked, optimisticToggle] = useOptimistic<
 		boolean,
 		boolean
-	>(isBookmarked, (prev, current) => !prev);
+	>(bookmarked, (prev) => !prev);
+
+	const toggleMutation = useMutation({
+		mutationFn: async (data: { postId: string; initial: boolean }) => {
+			return await toggleBookmarkFn({
+				data: {
+					postId: data.postId,
+					initial: data.initial,
+				},
+			});
+		},
+		onSuccess: () => {
+			// Invalidate bookmark-related queries
+			queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+			queryClient.invalidateQueries({ queryKey: ["bookmarked-posts"] });
+		},
+		onError: (error) => {
+			// Revert optimistic update on error
+			toggleStoreBookmark(postId);
+			toast.error("Failed to update bookmark. Please try again.");
+			console.error("Bookmark error:", error);
+		},
+	});
 
 	function initiateToggle() {
+		// Optimistic update
 		optimisticToggle(true);
-		toggle(postId);
 		toggleStoreBookmark(postId);
+
+		// Server update
+		startTransition(() => {
+			toggleMutation.mutate({
+				postId,
+				initial: bookmarked,
+			});
+		});
 	}
 
 	return (
@@ -36,11 +69,20 @@ export default function BookmarkButton({ postId }: BookmarkButtonProps) {
 			type="button"
 			className="absolute -top-1 right-1 z-50"
 			onClick={initiateToggle}
+			disabled={isPending || toggleMutation.isPending}
 		>
 			{!isOptimisticBookmarked ? (
-				<Bookmark fill="#25A8A8" stroke="#ffffff" className="h-10 w-10" />
+				<Bookmark
+					fill="#25A8A8"
+					stroke="#ffffff"
+					className={`h-10 w-10 ${isPending ? "opacity-50" : ""}`}
+				/>
 			) : (
-				<BookmarkCheck fill="#25A8A8" stroke="#ffffff" className="h-10 w-10" />
+				<BookmarkCheck
+					fill="#25A8A8"
+					stroke="#ffffff"
+					className={`h-10 w-10 ${isPending ? "opacity-50" : ""}`}
+				/>
 			)}
 		</button>
 	);

@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 // import { ApiList } from "@/components/ui/api-list";
 
 import { columns } from "./columns";
-import { deleteManySubjects } from "@/server/subject/action/subject";
+import { deleteManySubjectsFn } from "@/server/subject/function";
 import { useServerTableStore } from "@/providers/server-table-provider";
 
 interface SubjectsClientProps {}
@@ -33,7 +33,7 @@ export const SubjectsClient: React.FC<SubjectsClientProps> = () => {
 			<DataTable
 				searchKey="name"
 				columns={columns}
-				deleteAction={deleteManySubjects}
+				deleteAction={deleteManySubjectsFn}
 			/>
 			<Heading title="API" description="API Calls for Subjects" />
 			<Separator />

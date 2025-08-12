@@ -1,8 +1,7 @@
-import { auth } from "@/lib/auth";
 import { authClient } from "@/lib/auth-client";
+import { hash } from "node:crypto";
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
-import { redirect } from "@tanstack/react-router";
-import { getHeaders, isError } from "@tanstack/react-start/server";
+import { getHeaders, setResponseStatus } from "@tanstack/react-start/server";
 
 export const authed = createMiddleware({ type: "function" }).server(
 	async ({ next, signal }) => {
@@ -13,7 +12,8 @@ export const authed = createMiddleware({ type: "function" }).server(
 			},
 		});
 		if (!data) {
-			throw redirect({ to: "/" });
+			setResponseStatus(401);
+			throw new Error("Unauthorized");
 		}
 
 		return next({
@@ -24,8 +24,20 @@ export const authed = createMiddleware({ type: "function" }).server(
 	},
 );
 
+export const isAdmin = createMiddleware({ type: "function" })
+	.middleware([authed])
+	.server(async ({ next, context }) => {
+		if (context.user?.role !== "admin") {
+			setResponseStatus(401);
+			throw new Error("You are not authorized to access this resource");
+		}
+
+		return next();
+	});
+
 export const getCurrentUser = createServerFn({ method: "GET" }).handler(
 	async ({ signal }) => {
+		// TODO: Implement caching with hashed key
 		const data = await authClient.getSession({
 			fetchOptions: {
 				headers: getHeaders() as HeadersInit,

@@ -39,7 +39,7 @@ export default function SubjectFilter({ subjects }: SubjectFilterProps) {
 				isMulti
 				value={field.state.value}
 				getOptionValue={(option) => option.value}
-				getOptionLabel={(option) => `${option.value} (${option.count})`}
+				getOptionLabel={(option) => `${option.value}`}
 				onChange={(newValue) => field.handleChange(newValue as FilterItem[])}
 				closeMenuOnSelect={false}
 			/>

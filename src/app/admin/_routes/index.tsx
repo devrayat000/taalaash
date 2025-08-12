@@ -18,11 +18,11 @@ import { Heading } from "@/components/ui/heading";
 // import DailyActiveUserBar from "./~components/daily-active-user-count";
 import CountCard from "./~components/count-card";
 import { useQueries, useSuspenseQueries } from "@tanstack/react-query";
-import { getUserCount } from "@/server/user/service";
-import { countBooks } from "@/server/book/service";
-import { countChapters } from "@/server/chapter/service";
-import { countPosts } from "@/server/post/service";
-import { countSubjects } from "@/server/subject/service";
+import { getUserCountFn } from "@/server/user/function";
+import { countBooksFn } from "@/server/book/function";
+import { countChaptersFn } from "@/server/chapter/function";
+import { countPostsFn } from "@/server/post/function";
+import { countSubjectsFn } from "@/server/subject/function";
 
 interface DashboardPageProps {
 	params: {
@@ -35,11 +35,11 @@ export const Route = createFileRoute("/admin/_routes/")({
 	async loader({ context }) {
 		const [userCount, bookAuthorCount, chapterCount, postCount, subjectCount] =
 			await Promise.all([
-				getUserCount(),
-				countBooks(),
-				countChapters(),
-				countPosts(),
-				countSubjects(),
+				getUserCountFn(),
+				countBooksFn(),
+				countChaptersFn(),
+				countPostsFn(),
+				countSubjectsFn(),
 			]);
 		return {
 			userCount,

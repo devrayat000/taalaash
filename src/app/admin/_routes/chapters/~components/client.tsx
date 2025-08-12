@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 // import { ApiList } from "@/components/ui/api-list";
 
 import { columns } from "./columns";
-import { deleteManyChapters } from "@/server/chapter/action/chapter";
+import { deleteManyChaptersFn } from "@/server/chapter/function";
 import { useServerTableStore } from "@/providers/server-table-provider";
 
 export const ChaptersClient: React.FC = () => {
@@ -31,7 +31,7 @@ export const ChaptersClient: React.FC = () => {
 			<DataTable
 				searchKey="name"
 				columns={columns}
-				deleteAction={deleteManyChapters}
+				deleteAction={deleteManyChaptersFn}
 			/>
 			<Heading title="API" description="API Calls for Chapters" />
 			<Separator />

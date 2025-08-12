@@ -1,9 +1,8 @@
-import { createServerFn } from "@tanstack/react-start";
 import db from "@/lib/db";
 import { mapKeys, camelCase } from "lodash";
 
 import { post, subject, chapter, bookAuthor, users } from "@/db/schema";
-import { count, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 const statsStatement = sql`
 SELECT
@@ -18,16 +17,14 @@ SELECT
 //   userCount: db.select({count: count()}).from(users).as('sq').count,
 // })
 export type Stats = {
-  userCount: number;
-  subjectCount: number;
-  bookAuthorCount: number;
-  chapterCount: number;
-  postCount: number;
+	userCount: number;
+	subjectCount: number;
+	bookAuthorCount: number;
+	chapterCount: number;
+	postCount: number;
 };
 
-export const getStats = createServerFn({ method: "GET" }).handler(
-  async (): Promise<Stats> => {
-    const [stats] = await db.execute<Stats>(statsStatement);
-    return mapKeys(stats, (_, key) => camelCase(key)) as any;
-  }
-);
+export async function getStats(): Promise<Stats> {
+	const [stats] = await db.execute<Stats>(statsStatement);
+	return mapKeys(stats, (_, key) => camelCase(key)) as Stats;
+}

@@ -1,9 +1,9 @@
-import * as z from "zod";
+import { z } from "zod/mini";
 import { useState } from "react";
 import { Trash } from "lucide-react";
 import type { InferSelectModel } from "drizzle-orm";
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -18,10 +18,10 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import {
-	createChapter,
-	deleteChapter,
-	updateChapter,
-} from "@/server/chapter/action/chapter";
+	createChapterFn,
+	deleteChapterFn,
+	updateChapterFn,
+} from "@/server/chapter/function";
 import { getBooksBySubject } from "@/server/book/action/book";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
@@ -30,9 +30,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ChapterTable } from "@/server/chapter/service";
 
 const formSchema = z.object({
-	name: z.string().min(1),
-	subjectId: z.string().min(1),
-	bookAuthorId: z.string().min(1),
+	name: z.string().check(z.minLength(1)),
+	subjectId: z.string().check(z.minLength(1)),
+	bookAuthorId: z.string().check(z.minLength(1)),
 });
 
 type Subject = InferSelectModel<typeof subject>;
@@ -69,7 +69,7 @@ export const ChapterForm: React.FC<ChapterFormProps> = ({
 		queryKey: ["books-by-subject", selectedSubjectId],
 		queryFn: async () => {
 			if (!selectedSubjectId) return null;
-			return await getBooksBySubject({data: {id: selectedSubjectId}});
+			return await getBooksBySubject({ data: { id: selectedSubjectId } });
 		},
 		enabled: !!selectedSubjectId,
 		initialData:
@@ -89,7 +89,7 @@ export const ChapterForm: React.FC<ChapterFormProps> = ({
 			try {
 				setLoading(true);
 				if (initialData) {
-					await updateChapter({
+					await updateChapterFn({
 						data: {
 							id: initialData.id,
 							params: {
@@ -100,7 +100,7 @@ export const ChapterForm: React.FC<ChapterFormProps> = ({
 					});
 					navigate({ reloadDocument: true });
 				} else {
-					const result = await createChapter({
+					const result = await createChapterFn({
 						data: {
 							name: data.name,
 							bookAuthorId: data.bookAuthorId,
@@ -111,10 +111,10 @@ export const ChapterForm: React.FC<ChapterFormProps> = ({
 						params: { chapterId: result.id },
 					});
 				}
-				toast({ description: toastMessage });
+				toast.success(toastMessage);
 				queryClient.invalidateQueries({ queryKey: ["chapters"] });
 			} catch {
-				toast({ description: "Something went wrong.", variant: "destructive" });
+				toast.error("Something went wrong.");
 			} finally {
 				setLoading(false);
 			}
@@ -125,18 +125,16 @@ export const ChapterForm: React.FC<ChapterFormProps> = ({
 		try {
 			setLoading(true);
 			if (typeof params?.chapterId === "string")
-				await deleteChapter({ data: { id: params.chapterId } });
+				await deleteChapterFn({ data: { id: params.chapterId } });
 			navigate({
 				to: "/admin/chapters",
 			});
-			toast({ description: "Chapter deleted." });
+			toast.success("Chapter deleted.");
 			queryClient.invalidateQueries({ queryKey: ["chapters"] });
 		} catch {
-			toast({
-				description:
-					"Make sure you removed all products using this chapter first.",
-				variant: "destructive",
-			});
+			toast.error(
+				"Make sure you removed all products using this chapter first.",
+			);
 		} finally {
 			setLoading(false);
 			setOpen(false);

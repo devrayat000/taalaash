@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import {
-	useNavigate,
-	useParams,
-	useRouter,
-	useRouterState,
-} from "@tanstack/react-router";
+import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AlertModal } from "@/components/modals/alert-modal";
 
-import { SubjectColumn } from "./columns";
-import { deleteSubject } from "@/server/subject/action/subject";
+import type { SubjectColumn } from "./columns";
+import { deleteSubjectFn } from "@/server/subject/function";
 
 interface CellActionProps {
 	data: SubjectColumn;
@@ -33,15 +28,14 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 	const onConfirm = async () => {
 		try {
 			setLoading(true);
-			await deleteSubject({ data: { id: data.id } });
-			toast({ description: "Subject deleted." });
+			await deleteSubjectFn({ data: { id: data.id } });
+			toast.success("Success", { description: "Subject deleted." });
 			navigate({ reloadDocument: true });
 			// router.refresh();
 		} catch (error) {
-			toast({
+			toast.error("Error", {
 				description:
 					"Make sure you removed all products using this size first.",
-				variant: "destructive",
 			});
 		} finally {
 			setOpen(false);
@@ -50,8 +44,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 	};
 
 	const onCopy = (id: string) => {
-		navigator.clipboard.writeText(id);
-		toast({ description: "Subject ID copied to clipboard." });
+		toast.promise(navigator.clipboard.writeText(id), {
+			success: "Subject ID copied to clipboard.",
+		});
 	};
 
 	return (

@@ -6,7 +6,7 @@ import { ArrowUpDown } from "lucide-react";
 import { CellAction } from "./cell-action";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { PostTable } from "@/server/post/service";
+import type { PostTable } from "@/server/post/service";
 
 export type PostColumn = PostTable;
 

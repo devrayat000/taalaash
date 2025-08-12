@@ -2,10 +2,10 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
-	consumeHighlight,
-	requestHighlight,
-} from "@/server/post/action/highlight";
-import { PostTable } from "@/server/post/service";
+	consumeHighlightFn,
+	requestHighlightFn,
+} from "@/server/post/function/highlight";
+// import { PostTable } from "@/server/post/service";
 import { useState, useEffect, useRef } from "react";
 import { create } from "zustand";
 
@@ -84,7 +84,7 @@ const HighlightedImage = ({
 				setIsLoading(true);
 				setError(null);
 
-				const { taskId } = await requestHighlight({
+				const { taskId } = await requestHighlightFn({
 					data: {
 						fileUrl: post.imageUrl,
 						searchText: searchText,
@@ -94,75 +94,69 @@ const HighlightedImage = ({
 						},
 					},
 					signal,
-				});
-				const response = await consumeHighlight({ data: { taskId }, signal });
-
-				if (!response.ok) {
-					throw new Error("Failed to fetch highlights");
-				}
-
-				const reader = response.body?.getReader();
-
-				if (!reader) {
-					throw new Error("Failed to read response body");
-				}
-
-				const decoder = new TextDecoder();
-
-				let highlightsData: HighlightBox[] = [];
-				let timeoutId: NodeJS.Timeout;
-
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-
-					const chunk = decoder.decode(value, { stream: true });
-					console.log({ chunk });
-
-					const lines = chunk.split("\n").filter((line) => line.trim());
-
-					for (const line of lines) {
-						try {
-							const data = JSON.parse(line.replace(/data:\s/, "").trim());
-
-							if (data.status === "completed") {
-								if (data.data?.error) {
-									setError(data.data.error);
-								} else {
-									setHighlights(data.data?.highlights || []);
-									setPopupHighlights(data.data?.highlights || []);
-								}
-								setIsLoading(false);
-								reader.cancel();
-								clearTimeout(timeoutId);
-							} else if (data.status === "pending") {
-								// Reset timeout on each pending message
-								clearTimeout(timeoutId);
-								timeoutId = setTimeout(() => {
-									setError("Highlight processing timed out. Please try again.");
-									setIsLoading(false);
-									reader.cancel();
-								}, 30000); // 30 second timeout
-							}
-						} catch (parseError) {
-							setError("Failed to parse highlight response");
-							setIsLoading(false);
-							reader.cancel();
-							console.error("Failed to parse highlight response:", parseError);
-						}
-					}
-				}
-
-				// eventSource = new EventSource(consumeHighlight.url, {
-				// 	withCredentials: true,
+				}).catch(console.log);
+				// const response = await consumeHighlightFn({
+				// 	data: { taskId },
+				// 	signal: AbortSignal.timeout(45000),
 				// });
 
-				// let timeoutId: NodeJS.Timeout;
+				const url = new URL(consumeHighlightFn.url, window.origin);
+				url.searchParams.append(
+					"payload",
+					JSON.stringify({
+						data: { taskId },
+						context: {},
+					}),
+				);
+				url.searchParams.append("createServerFn", "");
+				url.searchParams.append("raw", "");
 
-				// function handleMessage(event: MessageEvent) {
-				// 	console.log("SSE Message:", event.data);
+				const source = new EventSource(url, {
+					withCredentials: true,
+				});
+
+				source.addEventListener("message", (event) => {
+					const data = JSON.parse(event.data);
+					if (data.status === "completed") {
+						if (data.data?.error) {
+							setError(data.data.error);
+						} else {
+							setHighlights(data.data?.highlights || []);
+							setPopupHighlights(data.data?.highlights || []);
+						}
+						setIsLoading(false);
+						source.close();
+					}
+				});
+
+				source.addEventListener("error", (event) => {
+					console.error("EventSource error:", event);
+					setError("Failed to fetch highlights");
+					setIsLoading(false);
+					source.close();
+				});
+
+				// if (!response.ok) {
+				// 	throw new Error("Failed to fetch highlights");
+				// }
+
+				// const reader = response.body?.getReader();
+
+				// if (!reader) {
+				// 	throw new Error("Failed to read response body");
+				// }
+
+				// const decoder = new TextDecoder();
+
+				// while (true) {
+				// 	const { done, value } = await reader.read();
+				// 	if (done) break;
+
+				// 	const chunk = decoder.decode(value);
+				// 	console.log({ chunk });
+
 				// 	try {
-				// 		const data = JSON.parse(event.data);
+				// 		const data = JSON.parse(chunk.replace(/data:\s/, "").trim());
 
 				// 		if (data.status === "completed") {
 				// 			if (data.data?.error) {
@@ -172,40 +166,16 @@ const HighlightedImage = ({
 				// 				setPopupHighlights(data.data?.highlights || []);
 				// 			}
 				// 			setIsLoading(false);
-				// 			eventSource?.close();
-				// 			clearTimeout(timeoutId);
+				// 			reader.cancel();
 				// 		} else if (data.status === "pending") {
-				// 			// Reset timeout on each pending message
-				// 			clearTimeout(timeoutId);
-				// 			timeoutId = setTimeout(() => {
-				// 				setError("Highlight processing timed out. Please try again.");
-				// 				setIsLoading(false);
-				// 				eventSource?.close();
-				// 			}, 30000); // 30 second timeout
 				// 		}
 				// 	} catch (parseError) {
 				// 		setError("Failed to parse highlight response");
 				// 		setIsLoading(false);
-				// 		eventSource?.close();
+				// 		reader.cancel();
+				// 		console.error("Failed to parse highlight response:", parseError);
 				// 	}
 				// }
-
-				// eventSource.addEventListener("message", handleMessage);
-
-				// eventSource.onerror = (err) => {
-				// 	console.error("SSE error", err);
-				// 	setError("Connection error. Please try again.");
-				// 	setIsLoading(false);
-				// 	eventSource?.close();
-				// 	clearTimeout(timeoutId);
-				// };
-
-				// // Set initial timeout
-				// timeoutId = setTimeout(() => {
-				// 	setError("Highlight processing timed out. Please try again.");
-				// 	setIsLoading(false);
-				// 	eventSource?.close();
-				// }, 30000);
 			} catch (error) {
 				console.error("Failed to request highlights:", error);
 				setError(
@@ -222,7 +192,13 @@ const HighlightedImage = ({
 		return () => {
 			// if (hasRequested.current < 2) controller.abort();
 		};
-	}, [post.imageUrl, searchText, setPopupHighlights]);
+	}, [
+		post.imageUrl,
+		searchText,
+		setPopupHighlights,
+		post.book.name,
+		post.chapter.name,
+	]);
 
 	const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
 		const img = e.currentTarget;

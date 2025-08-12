@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { SubjectForm } from "./~components/subject-form";
-import { getSubjectById } from "@/server/subject/service";
+import { getSubjectByIdFn } from "@/server/subject/function";
 
 const SizePage = async ({ params }: { params: { subjectId: string } }) => {
 	let initialData = null;

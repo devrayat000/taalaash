@@ -9,20 +9,22 @@ const dbUrl =
 	"postgres://postgres:postgres@localhost:5432/bionex";
 
 // for query purposes
-const queryClient = postgres(dbUrl);
 
 declare global {
-	var dz: PostgresJsDatabase<typeof schema> | undefined;
+	var db: PostgresJsDatabase<typeof schema> | undefined;
 }
 
-const db =
-	globalThis.dz ||
-	drizzle(queryClient, {
-		logger: process.env.NODE_ENV !== "production",
-		schema,
-	});
-if (process.env.NODE_ENV !== "production") globalThis.dz = db;
+if (typeof window === "undefined") {
+	const queryClient = postgres(dbUrl);
+	const db =
+		globalThis.db ||
+		drizzle(queryClient, {
+			logger: process.env.NODE_ENV !== "production",
+			schema,
+		});
+	globalThis.db = db;
+}
 
-export default db;
+export default globalThis.db!;
 
-export { queryClient as dbClient };
+// export { queryClient as dbClient };

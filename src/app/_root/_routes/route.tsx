@@ -1,20 +1,17 @@
 // import Header from "../components/header";
 // import { getBookmarkedList } from "@/server/bookmark/service";
 // import { ServerStoreProvider } from "@/hooks/use-server-data";
+import { ServerStoreProvider } from "@/hooks/use-server-data";
 import { PopupProvider } from "@/providers/popup-provider";
 
 function MainLayout() {
 	// const [bookmarks] = await Promise.all([getBookmarkedList()]);
 
 	return (
-		// <ServerStoreProvider initialData={{ bookmarks, searchHistory: [] }}>
-		//   {children}
-		//   <PopupProvider />
-		// </ServerStoreProvider>
-		<Fragment>
+		<ServerStoreProvider initialData={{ bookmarks: [], searchHistory: [] }}>
 			<Outlet />
 			<PopupProvider />
-		</Fragment>
+		</ServerStoreProvider>
 	);
 }
 

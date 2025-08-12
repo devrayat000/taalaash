@@ -3,14 +3,14 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { ServerTableStoreProvider } from "@/providers/server-table-provider";
 import { BooksClient } from "./~components/client";
 import { searchParamsSchema } from "@/lib/schemas";
-import { getBooks } from "@/server/book/service";
+import { getBooksFn } from "@/server/book/function";
 import { useQuery } from "@tanstack/react-query";
 
 const SizesPage = async () => {
 	const search = useSearch({ from: "/admin/_routes/books/" });
 	const { data } = useQuery({
 		queryKey: ["books", search],
-		queryFn: () => getBooks({ data: search }),
+		queryFn: () => getBooksFn({ data: search }),
 	});
 
 	return (
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/admin/_routes/books/")({
 	async loader({ context, deps }) {
 		await context.queryClient.ensureQueryData({
 			queryKey: ["books", deps],
-			queryFn: () => getBooks({ data: deps }),
+			queryFn: () => getBooksFn({ data: deps }),
 		});
 	},
 });

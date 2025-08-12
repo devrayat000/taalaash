@@ -3,9 +3,10 @@ import { SearchSchema, searchSchema } from "./searchSchema";
 import { getBooksBySubject, getChaptersByBook } from "./filters/actions";
 import FilterSheet from "./filters/sheet";
 import FilterSidebar from "./filters/sidebar";
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { getAllSubjects } from "@/server/subject/service";
+import { getSubjectsFn } from "@/server/subject/function";
+import { useAppForm } from "./filters/form";
 
 // TODO: Implement progressive filtering
 export default function Filters() {
@@ -19,7 +20,7 @@ export default function Filters() {
 	// );
 	const { data: subjects } = useSuspenseQuery({
 		queryKey: ["subjects", searchParams.query],
-		queryFn: () => getAllSubjects(),
+		queryFn: () => getSubjectsFn(),
 	});
 
 	const { data: books } = useQuery({
@@ -27,23 +28,23 @@ export default function Filters() {
 		queryFn: () =>
 			getBooksBySubject({
 				data: {
-					subjects: searchParams.subject || [],
+					subjects: searchParams.subjects || [],
 					query: searchParams.query,
 				},
 			}),
-		enabled: !!searchParams.subject?.length,
+		enabled: !!searchParams.subjects?.length,
 	});
 	const { data: chapters } = useQuery({
 		queryKey: ["chapters", searchParams.query],
 		queryFn: () =>
 			getChaptersByBook({
 				data: {
-					subjects: searchParams.subject || [],
+					subjects: searchParams.subjects || [],
 					books: searchParams.books || [],
 					query: searchParams.query,
 				},
 			}),
-		enabled: !!searchParams.subject?.length,
+		enabled: !!searchParams.subjects?.length && !!searchParams.books?.length,
 	});
 
 	// const books = params.subjects?.length
@@ -67,17 +68,55 @@ export default function Filters() {
 	//   : undefined;
 
 	const initial = {
-		subjects: subjects?.map((s) => ({ value: s.name, count: 0 })) || [],
+		subjects: subjects.data?.map((s) => ({ value: s.name, count: 0 })) || [],
 		books: books,
 		chapters: chapters,
 		//   books: books,
 		//   chapters: chapters,
 	};
 
+	const navigate = useNavigate();
+	const form = useAppForm({
+		defaultValues: {
+			subjects:
+				initial?.subjects?.filter((s) =>
+					searchParams.subjects?.includes(s.value),
+				) || [],
+			books:
+				initial?.books?.filter((s) => searchParams.books?.includes(s.value)) ||
+				[],
+			chapters:
+				initial?.chapters?.filter((s) =>
+					searchParams.chapters?.includes(s.value),
+				) || [],
+		},
+		onSubmit: async ({ value }) => {
+			console.log("Submitting filters:", value);
+			navigate({
+				to: "/search",
+				search: {
+					...searchParams,
+					subjects: value.subjects.map((s) => s.value),
+					books: value.books.map((s) => s.value),
+					chapters: value.chapters.map((s) => s.value),
+				},
+				reloadDocument: false,
+				replace: true,
+			});
+		},
+	});
+
 	return (
-		<>
-			<FilterSidebar initialData={initial} />
-			<FilterSheet initialData={initial} />
-		</>
+		<form.AppForm>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					form.handleSubmit();
+				}}
+			>
+				<FilterSidebar initialData={initial} />
+				<FilterSheet initialData={initial} />
+			</form>
+		</form.AppForm>
 	);
 }
