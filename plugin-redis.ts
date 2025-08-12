@@ -5,7 +5,9 @@ export default defineNitroPlugin(async (app) => {
 	console.log("Connecting to Redis...");
 	console.log("Redis URL:", process.env.REDIS_URL);
 
-	await redis.connect();
+	if (!redis.isReady) {
+		redis.connect();
+	}
 
 	app.hooks.hook("close", () => {
 		redis.quit();
