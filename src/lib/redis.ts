@@ -13,8 +13,8 @@ redis.on("end", () => {
 	console.warn("[redis] connection ended; marking client closed");
 });
 
-// if (process.env.DEV) {
-// 	await redis.connect();
-// }
+if (!redis.isReady) {
+	redis.connect();
+}
 
 export default redis;

@@ -30,6 +30,10 @@ export function withCache<T extends (...args: any[]) => any>(
 		async (
 			...args: Parameters<T>
 		): Promise<WithCacheResult<Awaited<ReturnType<T>>>> => {
+			if (!redis.isReady) {
+				await redis.connect();
+			}
+
 			const [fn, opts] = options;
 			const cacheHash = hashKey([fn.name, ...args]);
 			const cacheKey = `cache:${opts?.prefix || "default"}:${cacheHash}`;
